@@ -214,6 +214,23 @@ class SolverApp:
         self._stop_event = threading.Event()
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
+        # Force window to front and auto-start
+        self.root.lift()
+        self.root.focus_force()
+        self.root.after(200, self._auto_start)
+
+    def _auto_start(self):
+        if self.api_var.get().strip():
+            self.start()
+        else:
+            self._log("⚠  Enter your Anthropic API key above, then press Enter to start.")
+            self.api_var.trace_add("write", lambda *_: self._on_key_change())
+
+    def _on_key_change(self):
+        key = self.api_var.get().strip()
+        if key and not self._stop_event.is_set() and self.start_btn["state"] == tk.NORMAL:
+            self.root.after(500, lambda: self.start() if self.api_var.get().strip() else None)
+
     # ── Internal helpers ───────────────────────────────────────────────────
 
     def _log(self, msg: str):
