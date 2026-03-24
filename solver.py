@@ -1,119 +1,105 @@
 """
-Jazz Appreciation Cerego Solver
-================================
-Automatically solves Cerego assignments for Jazz Appreciation by:
-  1. Taking a screenshot
-  2. Sending it to Claude (vision) to identify the question and correct answer
-  3. Moving the mouse to the answer and clicking it
-  4. Repeating until the assignment is complete
+Jazz Appreciation Cerego Solver – GUI Edition
+=============================================
+A floating control panel that stays on top of all windows.
 
-Controls
---------
-  Press  Ctrl+Q  at any time to exit safely.
-  Press  Ctrl+S  to start (or re-start) the solver.
-
-Setup
+Usage
 -----
-  pip install -r requirements.txt
-  export ANTHROPIC_API_KEY="your-key-here"
-  python solver.py
+1. python solver.py
+2. Enter your Anthropic API key in the field (saved for the session)
+3. Navigate to your Cerego assignment in Chrome
+4. Click  ▶ Start
+5. Click  ■ Stop  or move mouse to the TOP-LEFT corner for emergency stop
+
+The window stays on top of Chrome so you can always reach the Stop button.
 """
 
 import base64
 import io
 import json
 import os
-import sys
 import time
 import threading
+import tkinter as tk
+from tkinter import scrolledtext
 
 import anthropic
 import pyautogui
-import keyboard
 from PIL import Image
 
-# ── Configuration ────────────────────────────────────────────────────────────
+# ── Configuration ─────────────────────────────────────────────────────────────
+CLICK_DELAY   = 1.2   # wait after clicking an answer  (seconds)
+ADVANCE_DELAY = 0.9   # wait after clicking Continue   (seconds)
+IDLE_DELAY    = 2.0   # wait when no question found    (seconds)
+MAX_IDLE      = 8     # consecutive idle cycles before pausing
 
-# How long to wait after each click before taking the next screenshot (seconds)
-CLICK_DELAY = 1.5
+pyautogui.FAILSAFE = True   # move mouse to top-left corner → emergency stop
+pyautogui.PAUSE    = 0.25
 
-# How long to wait when the solver sees no actionable question (seconds)
-IDLE_DELAY = 2.0
+# ── Claude prompts ────────────────────────────────────────────────────────────
 
-# Maximum consecutive "no question found" responses before pausing and asking
-# the user to manually advance (prevents infinite spin on completion screens)
-MAX_IDLE_COUNT = 10
+ANSWER_PROMPT = """\
+You are an expert assistant solving Cerego flashcard assignments for a Jazz Appreciation course.
 
-# PyAutoGUI safety margin (pixels) – moves cursor to corner to abort if panicked
-pyautogui.FAILSAFE = True
-pyautogui.PAUSE = 0.3   # small pause between pyautogui calls
+You will receive a screenshot of the Cerego quiz interface. Identify the current question and
+select the correct answer using your deep knowledge of jazz history, artists, instruments,
+eras, genres, and styles.
 
-# ── Globals ──────────────────────────────────────────────────────────────────
+Return ONLY a JSON object — no markdown fences, no explanation outside the JSON:
+{
+  "question_visible": true | false,
+  "assignment_complete": true | false,
+  "question_type": "multiple_choice" | "matching" | "fill_in" | "other" | null,
+  "question_text": "<the question text, or null>",
+  "correct_answer": "<text of the correct answer option, or null>",
+  "click_x": <integer pixel x-coordinate of the answer to click, or null>,
+  "click_y": <integer pixel y-coordinate of the answer to click, or null>,
+  "reasoning": "<one-sentence explanation>"
+}
 
-running = False          # solver loop active
-stop_event = threading.Event()
+Rules:
+- click_x / click_y must be the CENTER of the answer button you want to click.
+- If the assignment is complete (e.g. "Well done!", score screen), set assignment_complete=true.
+- If a loading screen, blank page, or non-quiz content is shown, set question_visible=false.
+- For matching/connect questions return ONE click per response (the next unmatched item).
+- Coordinates are measured from the top-left of the screenshot.
+- Provide coordinates even when uncertain — wrong answers carry no penalty.
+"""
 
-client = anthropic.Anthropic()   # reads ANTHROPIC_API_KEY from env
+NEXT_PROMPT = """\
+You are helping a solver advance through Cerego flashcard screens after an answer has been clicked.
 
+Look at the screenshot and find the button that moves to the next card. It is usually near the
+bottom-center of the screen and may be labeled: "Continue", "Next", "Got it", "Keep studying",
+"I knew it", "I didn't know it", or shown as a right-arrow ▶.
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+Return ONLY a JSON object — no markdown, no extra text:
+{
+  "button_found": true | false,
+  "button_label": "<label text or null>",
+  "click_x": <integer x or null>,
+  "click_y": <integer y or null>
+}
+"""
+
+# ── Screenshot helper ─────────────────────────────────────────────────────────
 
 def screenshot_b64() -> str:
-    """Take a full-screen screenshot and return it as a base64-encoded PNG."""
+    """Full-screen screenshot → base64-encoded PNG string."""
     img: Image.Image = pyautogui.screenshot()
     buf = io.BytesIO()
     img.save(buf, format="PNG")
-    return base64.standard_b64encode(buf.getvalue()).decode("utf-8")
+    return base64.standard_b64encode(buf.getvalue()).decode()
 
 
-SYSTEM_PROMPT = """
-You are an expert assistant that helps solve Cerego assignments for a Jazz Appreciation course.
+# ── Claude call helper ────────────────────────────────────────────────────────
 
-The user will send you a screenshot of the Cerego quiz interface. Your job is to:
-
-1. Identify whether an actionable question is currently displayed.
-2. Determine the correct answer using your knowledge of jazz music history.
-3. Return ONLY a JSON object (no markdown, no explanation outside JSON) with the following schema:
-
-{
-  "question_visible": true | false,
-  "question_type": "multiple_choice" | "matching" | "listening" | "other" | null,
-  "question_text": "<the question text, or null>",
-  "correct_answer": "<text of the correct answer option, or null>",
-  "click_x": <integer pixel x-coordinate to click, or null>,
-  "click_y": <integer pixel y-coordinate to click, or null>,
-  "assignment_complete": true | false,
-  "reasoning": "<brief explanation of your answer choice>"
-}
-
-Question types you may encounter:
-- multiple_choice: Click the option that correctly answers the question about jazz.
-- matching / connect: Two columns; you may need to click the left item first, then the right item.
-  Return one pair per response (the first unmatched pair).
-- listening (Deep Listening): A short audio clip plays; click the matching genre/era/artist.
-- other: Any other interactive element.
-
-Rules:
-- Use your deep knowledge of jazz history, artists, instruments, eras, and styles.
-- If you can see that the assignment is already complete (e.g. a "Well done!" or results screen),
-  set assignment_complete to true and question_visible to false.
-- If the screen shows a loading spinner, blank page, or non-quiz content, set question_visible
-  to false and assignment_complete to false.
-- The click coordinates should be the CENTER of the answer button/option you want to click.
-  Estimate from the screenshot dimensions (typically 1920x1080 or similar).
-- For matching questions, return the coordinates for ONE click at a time (the next unmatched item
-  to click). The solver will call you again after each click to get the next click.
-- Provide coordinates even if you are not 100% certain; wrong answers have no penalty.
-"""
-
-
-def ask_claude(img_b64: str) -> dict:
-    """Send the screenshot to Claude and get back a parsed action dict."""
+def call_claude(client: anthropic.Anthropic, system: str, img_b64: str) -> dict:
+    """Send screenshot to Claude with the given system prompt; return parsed dict."""
     response = client.messages.create(
         model="claude-opus-4-6",
-        max_tokens=1024,
-        thinking={"type": "adaptive"},
-        system=SYSTEM_PROMPT,
+        max_tokens=512,
+        system=system,
         messages=[
             {
                 "role": "user",
@@ -128,169 +114,230 @@ def ask_claude(img_b64: str) -> dict:
                     },
                     {
                         "type": "text",
-                        "text": (
-                            "Please analyze this Cerego screenshot and return the JSON action "
-                            "object as described in your instructions."
-                        ),
+                        "text": "Analyze this screenshot and return the JSON response.",
                     },
                 ],
             }
         ],
     )
 
-    # Extract the text block (thinking blocks may precede it)
-    raw_text = ""
+    raw = ""
     for block in response.content:
         if block.type == "text":
-            raw_text = block.text
+            raw = block.text.strip()
             break
 
-    # Strip any accidental markdown fences
-    raw_text = raw_text.strip()
-    if raw_text.startswith("```"):
-        raw_text = raw_text.split("\n", 1)[-1]
-        if raw_text.endswith("```"):
-            raw_text = raw_text[: raw_text.rfind("```")]
+    # Strip accidental markdown fences
+    if raw.startswith("```"):
+        raw = raw.split("\n", 1)[-1]
+        if "```" in raw:
+            raw = raw[: raw.rfind("```")]
 
     try:
-        return json.loads(raw_text)
+        return json.loads(raw.strip())
     except json.JSONDecodeError:
-        print(f"[WARN] Could not parse JSON from Claude response:\n{raw_text}")
-        return {
-            "question_visible": False,
-            "assignment_complete": False,
-            "click_x": None,
-            "click_y": None,
-        }
+        return {}
 
 
-def do_click(x: int, y: int) -> None:
-    """Move to (x, y) and left-click."""
-    pyautogui.moveTo(x, y, duration=0.4)
-    pyautogui.click()
+# ── GUI ───────────────────────────────────────────────────────────────────────
 
+class SolverApp:
+    def __init__(self, root: tk.Tk):
+        self.root = root
+        self.root.title("Jazz Cerego Solver")
+        self.root.geometry("480x400")
+        self.root.resizable(False, False)
+        self.root.attributes("-topmost", True)   # float above Chrome
 
-# ── Solver loop ───────────────────────────────────────────────────────────────
+        # ── API key ────────────────────────────────────────────────────────
+        key_frame = tk.Frame(root, padx=10, pady=8)
+        key_frame.pack(fill=tk.X)
+        tk.Label(key_frame, text="API Key:", width=8, anchor="w").pack(side=tk.LEFT)
+        self.api_var = tk.StringVar(value=os.environ.get("ANTHROPIC_API_KEY", ""))
+        tk.Entry(key_frame, textvariable=self.api_var, show="*").pack(
+            side=tk.LEFT, fill=tk.X, expand=True
+        )
 
-def solver_loop() -> None:
-    global running
-    idle_count = 0
+        # ── Buttons ────────────────────────────────────────────────────────
+        btn_frame = tk.Frame(root, padx=10, pady=4)
+        btn_frame.pack(fill=tk.X)
 
-    print("\n[Solver] Started. Watching the screen…")
-    print("[Solver] Move mouse to the top-left corner to trigger PyAutoGUI failsafe.\n")
+        self.start_btn = tk.Button(
+            btn_frame,
+            text="▶  Start",
+            width=14,
+            bg="#27ae60",
+            fg="white",
+            font=("Segoe UI", 10, "bold"),
+            relief=tk.FLAT,
+            command=self.start,
+        )
+        self.start_btn.pack(side=tk.LEFT, padx=(0, 8))
 
-    while not stop_event.is_set():
-        try:
-            img_b64 = screenshot_b64()
-            action = ask_claude(img_b64)
+        self.stop_btn = tk.Button(
+            btn_frame,
+            text="■  Stop",
+            width=14,
+            bg="#e74c3c",
+            fg="white",
+            font=("Segoe UI", 10, "bold"),
+            relief=tk.FLAT,
+            state=tk.DISABLED,
+            command=self.stop,
+        )
+        self.stop_btn.pack(side=tk.LEFT)
 
-            q_type    = action.get("question_type")
-            q_text    = action.get("question_text", "")
-            answer    = action.get("correct_answer", "")
-            reasoning = action.get("reasoning", "")
-            cx        = action.get("click_x")
-            cy        = action.get("click_y")
-            complete  = action.get("assignment_complete", False)
-            visible   = action.get("question_visible", False)
+        # ── Status bar ─────────────────────────────────────────────────────
+        self.status_var = tk.StringVar(
+            value="Ready  •  Move mouse to top-left corner to emergency-stop"
+        )
+        tk.Label(
+            root,
+            textvariable=self.status_var,
+            anchor="w",
+            fg="#666",
+            font=("Segoe UI", 9),
+        ).pack(fill=tk.X, padx=10, pady=(0, 2))
 
-            if complete:
-                print("\n[Solver] ✅  Assignment complete! Stopping.")
-                running = False
-                stop_event.set()
-                break
+        # ── Log ────────────────────────────────────────────────────────────
+        self.log = scrolledtext.ScrolledText(
+            root,
+            height=15,
+            state=tk.DISABLED,
+            wrap=tk.WORD,
+            font=("Consolas", 9),
+            bg="#1e1e1e",
+            fg="#d4d4d4",
+        )
+        self.log.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
 
-            if visible and cx is not None and cy is not None:
-                idle_count = 0
-                print(f"[Solver] Q ({q_type}): {q_text}")
-                print(f"[Solver] → Answer: {answer}")
-                print(f"[Solver] → Reason: {reasoning}")
-                print(f"[Solver] → Clicking ({cx}, {cy})\n")
-                do_click(int(cx), int(cy))
-                time.sleep(CLICK_DELAY)
-            else:
-                idle_count += 1
-                print(f"[Solver] No actionable question detected (idle #{idle_count})…")
+        self._stop_event = threading.Event()
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
-                if idle_count >= MAX_IDLE_COUNT:
-                    print(
-                        "\n[Solver] ⚠️  No question found after "
-                        f"{MAX_IDLE_COUNT} consecutive attempts.\n"
-                        "         The assignment may be complete, or the page may need "
-                        "manual interaction.\n"
-                        "         Press Ctrl+S to resume the solver after advancing the page,"
-                        " or Ctrl+Q to quit.\n"
-                    )
-                    # Pause the loop; wait for user to press Ctrl+S again or Ctrl+Q
-                    stop_event.wait()
-                    if stop_event.is_set():
-                        break
-                    # If somehow resumed (shouldn't happen via current keybindings) reset
+    # ── Internal helpers ───────────────────────────────────────────────────
+
+    def _log(self, msg: str):
+        def _do():
+            self.log.config(state=tk.NORMAL)
+            self.log.insert(tk.END, msg + "\n")
+            self.log.see(tk.END)
+            self.log.config(state=tk.DISABLED)
+        self.root.after(0, _do)
+
+    def _set_status(self, msg: str):
+        self.root.after(0, lambda: self.status_var.set(msg))
+
+    def _set_buttons(self, running: bool):
+        def _do():
+            self.start_btn.config(state=tk.DISABLED if running else tk.NORMAL)
+            self.stop_btn.config(state=tk.NORMAL if running else tk.DISABLED)
+        self.root.after(0, _do)
+
+    # ── Start / Stop ───────────────────────────────────────────────────────
+
+    def start(self):
+        api_key = self.api_var.get().strip()
+        if not api_key:
+            self._log("⚠  Please enter your Anthropic API key first.")
+            return
+        self._stop_event.clear()
+        self._set_buttons(running=True)
+        self._set_status("Running…")
+        threading.Thread(target=self._run, args=(api_key,), daemon=True).start()
+
+    def stop(self):
+        self._stop_event.set()
+        self._log("— Stop requested —")
+
+    def _on_close(self):
+        self._stop_event.set()
+        self.root.destroy()
+
+    # ── Solver loop ────────────────────────────────────────────────────────
+
+    def _run(self, api_key: str):
+        client = anthropic.Anthropic(api_key=api_key)
+        idle_count = 0
+
+        self._log("Solver started.  Switch to your Cerego tab.\n")
+
+        while not self._stop_event.is_set():
+            try:
+                # ── Phase 1: Find the question and click the correct answer ──
+                img = screenshot_b64()
+                action = call_claude(client, ANSWER_PROMPT, img)
+
+                if action.get("assignment_complete"):
+                    self._log("✅  Assignment complete!")
+                    self._set_status("Done — assignment complete")
+                    break
+
+                if action.get("question_visible") and action.get("click_x") is not None:
                     idle_count = 0
+                    q_text  = action.get("question_text", "")
+                    answer  = action.get("correct_answer", "")
+                    reason  = action.get("reasoning", "")
+                    cx, cy  = int(action["click_x"]), int(action["click_y"])
+
+                    self._log(f"Q: {q_text}")
+                    self._log(f"→ {answer}  [{reason}]")
+                    self._log(f"  clicking ({cx}, {cy})")
+
+                    pyautogui.moveTo(cx, cy, duration=0.35)
+                    pyautogui.click()
+                    time.sleep(CLICK_DELAY)
+
+                    # ── Phase 2: Find and click the Continue / Next button ──
+                    img2 = screenshot_b64()
+                    nxt  = call_claude(client, NEXT_PROMPT, img2)
+
+                    if nxt.get("button_found") and nxt.get("click_x") is not None:
+                        nx, ny = int(nxt["click_x"]), int(nxt["click_y"])
+                        label  = nxt.get("button_label") or "Next"
+                        self._log(f'  → "{label}" button at ({nx}, {ny})\n')
+                        pyautogui.moveTo(nx, ny, duration=0.35)
+                        pyautogui.click()
+                        time.sleep(ADVANCE_DELAY)
+                    else:
+                        self._log("  (no Continue button found — waiting)\n")
+                        time.sleep(IDLE_DELAY)
+
                 else:
+                    idle_count += 1
+                    self._log(f"No question detected (idle #{idle_count})")
+                    if idle_count >= MAX_IDLE:
+                        self._log(
+                            "\n⚠  Paused — no question found after "
+                            f"{MAX_IDLE} attempts.\n"
+                            "   Manually advance the page, then click ▶ Start again.\n"
+                        )
+                        self._set_status("Paused — waiting for user")
+                        break
                     time.sleep(IDLE_DELAY)
 
-        except pyautogui.FailSafeException:
-            print("\n[Solver] ⛔  PyAutoGUI failsafe triggered (mouse moved to corner). Stopping.")
-            running = False
-            stop_event.set()
-            break
-        except anthropic.APIError as exc:
-            print(f"[Solver] API error: {exc}. Retrying in 5 s…")
-            time.sleep(5)
-        except Exception as exc:
-            print(f"[Solver] Unexpected error: {exc}. Retrying in 3 s…")
-            time.sleep(3)
+            except pyautogui.FailSafeException:
+                self._log("⛔  Emergency stop (mouse moved to top-left corner).")
+                self._set_status("Emergency stopped")
+                break
+            except anthropic.APIError as exc:
+                self._log(f"API error: {exc}\n  Retrying in 5 s…")
+                time.sleep(5)
+            except Exception as exc:
+                self._log(f"Unexpected error: {exc}\n  Retrying in 3 s…")
+                time.sleep(3)
 
-    running = False
-    print("[Solver] Stopped.")
-
-
-# ── Keyboard hooks ────────────────────────────────────────────────────────────
-
-def on_start() -> None:
-    global running
-    if running:
-        print("[Keys] Solver already running.")
-        return
-    running = True
-    stop_event.clear()
-    t = threading.Thread(target=solver_loop, daemon=True)
-    t.start()
-
-
-def on_quit() -> None:
-    global running
-    print("\n[Keys] Ctrl+Q pressed – stopping solver and exiting…")
-    running = False
-    stop_event.set()
-    sys.exit(0)
+        self._set_buttons(running=False)
+        if not self.status_var.get().startswith("Done"):
+            self._set_status("Stopped")
+        self._log("Solver stopped.")
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 
-def main() -> None:
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        print(
-            "ERROR: ANTHROPIC_API_KEY environment variable is not set.\n"
-            "       Export it before running:  export ANTHROPIC_API_KEY='sk-ant-…'\n"
-        )
-        sys.exit(1)
-
-    print("=" * 60)
-    print("  Jazz Appreciation Cerego Solver")
-    print("=" * 60)
-    print("  Ctrl+S  →  Start / resume the solver")
-    print("  Ctrl+Q  →  Quit safely at any time")
-    print("  Move mouse to TOP-LEFT corner → emergency stop")
-    print("=" * 60)
-    print("\nNavigate to your Cerego assignment in the browser, then press Ctrl+S.\n")
-
-    keyboard.add_hotkey("ctrl+s", on_start)
-    keyboard.add_hotkey("ctrl+q", on_quit)
-
-    # Block main thread
-    keyboard.wait()
+def main():
+    root = tk.Tk()
+    SolverApp(root)
+    root.mainloop()
 
 
 if __name__ == "__main__":
