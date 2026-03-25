@@ -233,6 +233,13 @@ class SolverApp:
         time.sleep(0.1)
         self.root.attributes("-topmost", True)
 
+    def _park_cursor(self, x: int, y: int):
+        """Move cursor to position without clicking — used to hover over a button."""
+        self.root.attributes("-topmost", False)
+        self.root.update()
+        pyautogui.moveTo(x, y, duration=0.25)
+        self.root.attributes("-topmost", True)
+
     def _check_tesseract_async(self):
         try:
             check_tesseract()
@@ -437,8 +444,14 @@ class SolverApp:
         know_it_xy = tuple(calib["know_it_xy"])
         got_it_xy  = tuple(calib["got_it_xy"])
         regions    = {"question": q_region, "choices": c_region}
+        from ocr_engine import ocr_region
+        from rapidfuzz import fuzz, process as rfp
 
         idle_count = 0
+
+        # Park cursor at Know It / Got It button immediately — stays there
+        # except when clicking an answer choice.
+        self._park_cursor(*know_it_xy)
 
         while not self._stop_event.is_set():
             try:
@@ -450,68 +463,57 @@ class SolverApp:
                     break
 
                 elif state == ScreenState.INFO_CARD:
+                    # ── Park cursor at Got It, read the fact, click Got It ──────
                     idle_count = 0
-                    from ocr_engine import ocr_region
-                    # The card shows: subject (top / question region)
-                    #                 descriptor (bottom / choices region)
-                    # e.g.  "Pat Metheny"  /  "Guitar/Composer"
+                    self._park_cursor(*got_it_xy)   # hover over Got It while reading
+
                     subject    = ocr_region(q_region, psm=6).strip()
                     descriptor = ocr_region(c_region, psm=6).strip()
 
                     if subject and descriptor:
-                        # Store both directions — Cerego asks either way
                         self._feedback.record(subject,    descriptor)
                         self._feedback.record(descriptor, subject)
                         self._log(f"[Info card] {subject}  →  {descriptor}  (memorised)")
                     else:
-                        self._log(f"[Info card] — could not read content, skipping")
+                        self._log("[Info card] — could not read content")
 
-                    # Do NOT click anything — user clicks Got It manually.
-                    # Just wait long enough to avoid re-reading the same card.
+                    # Click Got It (cursor is already there) then return to hover
+                    self._click_on_chrome(*got_it_xy)
                     time.sleep(ADVANCE_DELAY)
+                    self._park_cursor(*know_it_xy)  # park at Know It for next card
 
                 elif state == ScreenState.QUESTION:
+                    # ── Cursor is parked at know_it_xy; move only to click answer ─
                     idle_count = 0
-
-                    # Read question text
-                    from ocr_engine import ocr_region
                     question_text = ocr_region(q_region, psm=6)
-
-                    # Find answer choices with their screen positions
-                    choices = find_answer_choices(c_region)
+                    choices       = find_answer_choices(c_region)
 
                     if not choices:
-                        self._log("  (question detected but no choices found — waiting)")
+                        self._log("  (no choices found — waiting)")
                         time.sleep(IDLE_DELAY)
                         continue
 
                     choice_texts = [c.text for c in choices]
 
-                    # ── Priority 1: Cerego's own feedback memory ──────────────
-                    from rapidfuzz import fuzz, process as rfp
+                    # Priority 1: Cerego's own feedback memory
                     feedback_answer = self._feedback.query(question_text)
                     if feedback_answer:
                         match = rfp.extractOne(
                             feedback_answer, choice_texts, scorer=fuzz.token_set_ratio
                         )
                         if match and match[1] >= 60:
-                            idx    = choice_texts.index(match[0])
-                            chosen = choices[idx]
+                            chosen = choices[choice_texts.index(match[0])]
                             source = "[Cerego memory]"
                         else:
-                            feedback_answer = None   # match too weak, fall through
+                            feedback_answer = None
 
-                    # ── Priority 2: Static knowledge base ─────────────────────
+                    # Priority 2: static knowledge base
                     if not feedback_answer:
                         best_text, confidence = self._kb.query(question_text, choice_texts)
                         match = rfp.extractOne(
                             best_text, choice_texts, scorer=fuzz.token_set_ratio
                         )
-                        if match:
-                            idx    = choice_texts.index(match[0])
-                            chosen = choices[idx]
-                        else:
-                            chosen = choices[0]
+                        chosen   = choices[choice_texts.index(match[0])] if match else choices[0]
                         conf_pct = f"{confidence:.0f}%"
                         warn     = "  [LOW CONFIDENCE — GUESS]" if confidence < 50 else ""
                         source   = f"[KB {conf_pct}]{warn}"
@@ -519,27 +521,28 @@ class SolverApp:
                     self._log(f"Q: {question_text[:80]}")
                     self._log(f"→ {chosen.text}  {source}")
 
+                    # Click the answer choice (only non-button click in the loop)
                     self._click_on_chrome(chosen.cx, chosen.cy)
-
-                    # ── Wait for Cerego to show feedback, then read it ─────────
                     time.sleep(CLICK_DELAY)
-                    verdict, cerego_correct = detect_answer_feedback(regions)
 
+                    # Read Cerego's visual feedback (green/red boxes)
+                    verdict, cerego_correct = detect_answer_feedback(regions)
                     if verdict == "correct":
                         self._feedback.record(question_text, chosen.text)
-                        self._log(f"  Cerego: CORRECT  — saved to memory")
+                        self._log("  Cerego: CORRECT  — saved to memory")
                     elif verdict == "incorrect":
                         if cerego_correct:
                             self._feedback.record(question_text, cerego_correct)
                             self._log(f"  Cerego: WRONG  — correct answer: {cerego_correct}  (saved)")
                         else:
-                            self._log(f"  Cerego: WRONG  — could not read correct answer from screen")
-                    # If "unknown" Cerego hasn't shown feedback yet or OCR missed it — just continue
+                            self._log("  Cerego: WRONG  — could not read correct answer")
 
+                    # Click Know It — cursor ends here (parked for next iteration)
                     self._click_on_chrome(*know_it_xy)
                     time.sleep(ADVANCE_DELAY)
 
                 else:  # LOADING / OTHER
+                    # Cursor stays parked at know_it_xy — no movement
                     idle_count += 1
                     self._log(f"Waiting for question… (idle #{idle_count})")
                     if idle_count >= MAX_IDLE:
