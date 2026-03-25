@@ -19,11 +19,13 @@ Emergency stop
 Move the mouse to the TOP-LEFT corner of the screen at any time.
 """
 
+import base64
 import json
 import os
 import time
 import threading
 import tkinter as tk
+from io import BytesIO
 from tkinter import scrolledtext, filedialog, messagebox
 
 import pyautogui
@@ -151,6 +153,28 @@ class SolverApp:
             padx=12, pady=4,
             command=self._calibrate,
         ).pack(side=tk.RIGHT, padx=(6, 0))
+
+        # ── API key row ────────────────────────────────────────────────────
+        api_frame = tk.Frame(self.root, padx=16, pady=4)
+        api_frame.pack(fill=tk.X)
+
+        tk.Label(
+            api_frame,
+            text="Anthropic API key (used after 3 min):",
+            font=("Segoe UI", 11),
+            anchor="w",
+        ).pack(side=tk.LEFT)
+
+        self._api_key_var = tk.StringVar(
+            value=os.environ.get("ANTHROPIC_API_KEY", "")
+        )
+        tk.Entry(
+            api_frame,
+            textvariable=self._api_key_var,
+            show="*",
+            font=("Segoe UI", 11),
+            width=36,
+        ).pack(side=tk.LEFT, padx=(8, 0))
 
         # ── Start / Stop buttons ───────────────────────────────────────────
         btn_frame = tk.Frame(self.root, padx=16, pady=8)
@@ -422,10 +446,76 @@ class SolverApp:
 
         self.root.after(100, do_step)
 
+    # ── Claude API helper ──────────────────────────────────────────────────
+
+    def _ask_claude(self, q_img, a_img, choices: list) -> str | None:
+        """
+        Send the question-page screenshot and the answers-page screenshot to
+        Claude and return the text of the answer choice it picks.
+        Returns None if the call fails or no key is configured.
+        """
+        try:
+            import anthropic
+        except ImportError:
+            self._log("  [Claude] anthropic package not installed — pip install anthropic")
+            return None
+
+        api_key = self._api_key_var.get().strip() or os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            self._log("  [Claude] No API key — skipping Claude")
+            return None
+
+        def _to_b64(img) -> str:
+            buf = BytesIO()
+            img.save(buf, format="PNG")
+            return base64.standard_b64encode(buf.getvalue()).decode()
+
+        choice_list = "\n".join(f"- {c.text}" for c in choices)
+        try:
+            client   = anthropic.Anthropic(api_key=api_key)
+            response = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=150,
+                messages=[{
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "You are answering a Jazz Appreciation Cerego quiz. "
+                                "The first image is the question page; the second image "
+                                "shows the answer choices."
+                            ),
+                        },
+                        {"type": "image",
+                         "source": {"type": "base64",
+                                    "media_type": "image/png",
+                                    "data": _to_b64(q_img)}},
+                        {"type": "image",
+                         "source": {"type": "base64",
+                                    "media_type": "image/png",
+                                    "data": _to_b64(a_img)}},
+                        {
+                            "type": "text",
+                            "text": (
+                                f"The available answer choices are:\n{choice_list}\n\n"
+                                "Reply with ONLY the exact text of the correct answer "
+                                "from the list above. Nothing else."
+                            ),
+                        },
+                    ],
+                }],
+            )
+            return response.content[0].text.strip()
+        except Exception as exc:
+            self._log(f"  [Claude] API error: {exc}")
+            return None
+
     # ── Solver loop ────────────────────────────────────────────────────────
 
     def _run(self):
         self._log("Solver started.  Switch to your Cerego tab.\n")
+        self._log("First 3 minutes: local knowledge base.  After 3 min: Claude API.\n")
 
         # Check Tesseract is available before starting
         try:
@@ -444,52 +534,25 @@ class SolverApp:
         from ocr_engine import ocr_region
         from rapidfuzz  import fuzz, process as rfp
 
+        session_start      = time.time()
+        claude_announced   = False          # log the mode switch exactly once
+        last_question_img  = None           # full-screen screenshot from know_it page
+
         # Cursor starts parked on the button.
         self._park_cursor(*know_it_xy)
 
         while not self._stop_event.is_set():
             try:
+                elapsed    = time.time() - session_start
+                use_claude = elapsed >= 180.0 and bool(self._api_key_var.get().strip()
+                                                       or os.environ.get("ANTHROPIC_API_KEY"))
+
+                if use_claude and not claude_announced:
+                    self._log("— 3 min elapsed: switching to Claude API mode —")
+                    self._set_status("Running — Claude API mode")
+                    claude_announced = True
+
                 label = read_button_label(know_it_xy)
-
-                # ══ NO BUTTON — choose-choice page ═══════════════════════════
-                # Scan for visible choice boxes and pick the best one;
-                # fall back to a center click only if OCR finds nothing.
-                if label == "unknown":
-                    question_text = ocr_region(q_region, psm=6).strip()
-                    choices       = find_answer_choices(c_region)
-
-                    if choices:
-                        choice_texts    = [c.text for c in choices]
-                        feedback_answer = self._feedback.query(question_text)
-                        chosen          = None
-
-                        if feedback_answer:
-                            m = rfp.extractOne(
-                                feedback_answer, choice_texts,
-                                scorer=fuzz.token_set_ratio,
-                            )
-                            if m and m[1] >= 60:
-                                chosen = choices[choice_texts.index(m[0])]
-                                source = "[Cerego memory]"
-
-                        if not chosen:
-                            best_text, conf = self._kb.query(question_text, choice_texts)
-                            m      = rfp.extractOne(best_text, choice_texts,
-                                                    scorer=fuzz.token_set_ratio)
-                            chosen = choices[choice_texts.index(m[0])] if m else choices[0]
-                            warn   = "  [GUESS]" if conf < 50 else ""
-                            source = f"[KB {conf:.0f}%]{warn}"
-
-                        self._log(f"[No-button] Q: {question_text[:80]}")
-                        self._log(f"→ {chosen.text}  {source}")
-                        self._click_on_chrome(chosen.cx, chosen.cy)
-                    else:
-                        sw, sh = pyautogui.size()
-                        self._log(f"[No-button] No choices found — clicking center")
-                        self._click_on_chrome(sw // 2, sh // 2)
-
-                    time.sleep(CLICK_DELAY)
-                    continue   # re-check label immediately
 
                 # ══ INFO CARD — "Got It" button present ═══════════════════════
                 # Memorise the card content, then spam-click until page changes.
@@ -503,9 +566,13 @@ class SolverApp:
                     else:
                         self._log("[Info card] — could not read content")
 
-                # ══ QUESTION — "Know It" button present ═══════════════════════
-                # Answer the question, then fall through to the spam loop below.
+                # ══ QUESTION PAGE — "Know It" button present ══════════════════
+                # Capture a full-screen screenshot for Claude, then do a local
+                # completion-check; any choices visible here are answered locally.
                 elif label == "know_it":
+                    # Always capture question screenshot (used by Claude on the next page)
+                    last_question_img = pyautogui.screenshot()
+
                     question_text = ocr_region(q_region, psm=6)
 
                     # Completion check
@@ -517,17 +584,15 @@ class SolverApp:
                         break
 
                     choices = find_answer_choices(c_region)
-
                     if choices:
+                        # Choices already visible on question page — answer locally
                         choice_texts    = [c.text for c in choices]
                         feedback_answer = self._feedback.query(question_text)
                         chosen          = None
 
                         if feedback_answer:
-                            m = rfp.extractOne(
-                                feedback_answer, choice_texts,
-                                scorer=fuzz.token_set_ratio,
-                            )
+                            m = rfp.extractOne(feedback_answer, choice_texts,
+                                               scorer=fuzz.token_set_ratio)
                             if m and m[1] >= 60:
                                 chosen = choices[choice_texts.index(m[0])]
                                 source = "[Cerego memory]"
@@ -543,11 +608,9 @@ class SolverApp:
                         self._log(f"Q: {question_text[:80]}")
                         self._log(f"→ {chosen.text}  {source}")
 
-                        # Click the answer (only time cursor leaves the button)
                         self._click_on_chrome(chosen.cx, chosen.cy)
                         time.sleep(CLICK_DELAY)
 
-                        # Read Cerego's green / red feedback
                         verdict, cerego_correct = detect_answer_feedback(regions)
                         if verdict == "correct":
                             self._feedback.record(question_text, chosen.text)
@@ -558,23 +621,83 @@ class SolverApp:
                                 self._log(f"  Cerego: WRONG — correct: {cerego_correct}  (saved)")
                             else:
                                 self._log("  Cerego: WRONG — correct answer not readable")
+                    # (no choices on question page: spam Know It → advances to answers page)
+
+                # ══ NO BUTTON — answers / choose-choice page ══════════════════
+                # After 3 min: send both screenshots to Claude.
+                # Before 3 min (or no API key): use local KB.
+                else:  # unknown
+                    choices = find_answer_choices(c_region)
+
+                    if choices:
+                        choice_texts    = [c.text for c in choices]
+                        chosen          = None
+
+                        if use_claude and last_question_img is not None:
+                            # ── Claude vision path ──────────────────────────
+                            a_img       = pyautogui.screenshot()
+                            claude_text = self._ask_claude(
+                                last_question_img, a_img, choices
+                            )
+                            if claude_text:
+                                m = rfp.extractOne(claude_text, choice_texts,
+                                                   scorer=fuzz.token_set_ratio)
+                                if m and m[1] >= 50:
+                                    chosen = choices[choice_texts.index(m[0])]
+                                    source = f"[Claude]"
+
+                        if not chosen:
+                            # ── Local fallback ──────────────────────────────
+                            question_text   = ocr_region(q_region, psm=6).strip()
+                            feedback_answer = self._feedback.query(question_text)
+
+                            if feedback_answer:
+                                m = rfp.extractOne(feedback_answer, choice_texts,
+                                                   scorer=fuzz.token_set_ratio)
+                                if m and m[1] >= 60:
+                                    chosen = choices[choice_texts.index(m[0])]
+                                    source = "[Cerego memory]"
+
+                            if not chosen:
+                                best_text, conf = self._kb.query(question_text, choice_texts)
+                                m      = rfp.extractOne(best_text, choice_texts,
+                                                        scorer=fuzz.token_set_ratio)
+                                chosen = choices[choice_texts.index(m[0])] if m else choices[0]
+                                warn   = "  [GUESS]" if conf < 50 else ""
+                                source = f"[KB {conf:.0f}%]{warn}"
+
+                        self._log(f"[Answers page] → {chosen.text}  {source}")
+                        self._click_on_chrome(chosen.cx, chosen.cy)
+                        time.sleep(CLICK_DELAY)
+
+                        # Learn from feedback even on no-button pages
+                        verdict, cerego_correct = detect_answer_feedback(regions)
+                        q_text_for_save = ocr_region(q_region, psm=6).strip() or "unknown_q"
+                        if verdict == "correct":
+                            self._feedback.record(q_text_for_save, chosen.text)
+                            self._log("  Cerego: CORRECT — saved")
+                        elif verdict == "incorrect":
+                            if cerego_correct:
+                                self._feedback.record(q_text_for_save, cerego_correct)
+                                self._log(f"  Cerego: WRONG — correct: {cerego_correct}  (saved)")
+                            else:
+                                self._log("  Cerego: WRONG — correct answer not readable")
 
                     else:
-                        # Visual / no-text-choices question
                         sw, sh = pyautogui.size()
-                        self._log(f"Q: {question_text[:80]}  [visual — clicking center]")
+                        self._log("[Answers page] No choices found — clicking center")
                         self._click_on_chrome(sw // 2, sh // 2)
                         time.sleep(CLICK_DELAY)
 
+                    continue   # re-check label immediately after answering
+
                 # ── Spam-click the green button until the page changes ─────────
-                # This handles Got It, Know It (after answering), and the Next
-                # button on feedback screens — all share the same screen position.
                 while not self._stop_event.is_set():
                     self._click_on_chrome(*know_it_xy)
                     time.sleep(0.1)
                     new_label = read_button_label(know_it_xy)
                     if new_label != label:
-                        break   # page has changed — return to outer loop
+                        break
 
             except pyautogui.FailSafeException:
                 self._log("Emergency stop (mouse moved to top-left corner).")
