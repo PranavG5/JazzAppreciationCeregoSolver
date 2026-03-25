@@ -1,13 +1,45 @@
-Learned facts  (22 unique pairs)
+Learned facts  (100 unique pairs)
 ============================================================
 
+le  |  1 th serene oe _ f je ce s ee eh a et yy of a a if a _ i a
+Y 1960s  |  1920s 1970s none of the above
+Y 1960s  |  1920s 1980s 1940s
+Y 1960s  |  1940s 1920s none of the above
+Y 1960s  |  1940s 1970s none of the above
+Y 1980s  |  1960s 1950s none of the above
+Y 1960s  |  1970s 1920s none of the above
+Y 1960s  |  1970s 1940s none of the above
+Y 1960s  |  1970s 1980s none of the above
+Y 1960s  |  1980s 1940s none of the above
+Y 1960s  |  1980s 1950s none of the above
 _ SS hv hv vo hv hv JJ  |  30s 40s 50s 50s 60s 70s 50s 60s 70s swing 4 hard bop cool _ ttt ttt 2 22 4o 2 a cool fusion modal free 20s 30s 40s 50s 60s 70s 40s 50s 60s 22 4 cool 22 4 swing 22 cool bebop hard bop fusion
+le  |  5 v a i en ee y a re ay wi ead 4 a 4 an _ _ 8 o oo o ad a a bed we t f _ _ g _ 5 be a os ee e a oo ee _ le wre o tne 3 me t oe cee ae iw sa ars ye fe qs co as ons oy _ sas ft yan 4 a gan ee wr e a mre 4d _ rr beeb q j j og a _ a igh 1a bo a _ 4 y iar xx re rb ps r a afl nw hy orf pi pa ys ty and at le a _ atl i 4 a or i t a th aa in
 PT lS _-  _  n Wa 0909000  |  50s 60s 70s 30s 40s 50s 40s 50s 60s cool _ swing 7200 el j 5s 7 222 4 cool modal free nd cool 5 fusion jazz cerego solver offline o x 1839 facts from 2 file s 50s 60s 70s 20s 30s 40s calibration saved 72 1 4 swing _ running manually advance cerego tnen click amstart again fusion bebop 7 solver stopped msolver started switch to your cerego
 Fusion | | cool Modal/Free > —---> enw TS CUE  |  50s 60s 70s 30s 40s 50s 40s 50s 60s cool _ swing 7200 le _ 5 7 4 2 j cool modal free cool fusion 50s 60s 70s 20s 30s 40s 50s 60s 70s hard bop f 2 4 cool t 2 4o swing 222 7 fusion bebop hard bop
+ee eee ago _  |  _ 79993 as a q ii 4 vea ers fy a oa eae melos salzz oe ail poon ee ae jf i ze
+ce le  |  _ _ rd lve 5 a _ 4 4 7 o i an we eee _ 3 id a ties
+ee ee  |  _ qintows plat aa pd py yo a bs _ or wi re ih ss neer c8 ge re 2d a 8 rae ay 1 a eee re y f yi i rn fy y pe cu so ce ne he va ws j ra 4 ae vii of _ e r aa iz
+SS vv  hh a  |  a i baad i 4 lag 1 hh x fia f wow srs e _ iy i ue 7 4 a a we ete ms e _ ne en 4 wile tees oee l 1 2 isge eh coe vot 5 eas f a an rahaiee n at toa on feo so wt woos i t ve e wy ee a ae f a y i _ awe ee
+i 000OOGVOVGOGORMRdMedOerm_meoecesrveesesrernemscrecmmrr_eeeerrve_eerveeeerrvrveceeoeororvv_ooov_eoorvvoooc_ovovnc_ovrvvovvwv__owovwvrrrovrrreoVooweree_Oemm i  |  a ye pl a beep 3 we ar p e re 4 ve y f 7 a a _ f a xs aaa a ed 1 y ai a 3 ue ieee bap tea ss i _ mf we ae ard in ie gr yy ete on eee gg cing poy ere ib i ki ng 4 7 a at at fan sg dele a aaa ax ie pee poy a ea _ wy fe io é 7 age tt meany sae 4 eb to oa 7 oa o a a onl htt ue aa ms roe ene rays eb ea a ry 2 q ee pee eee re te wty i ee a se mre ee be an we 4 an a see see 4 5 5 ee je a hte b e io q n i od _ 2 pee wn a lo l loo fd ees i fi a a oan oo wees 9 oi rs mo vtec tat si ok _ yo
+Y Clarinet, banjo, tuba  |  alto sax trumpet piano electric keyboard electric guitar piano bass drums
+Y Clarinet, banjo, tuba  |  alto sax trumpet piano piano bass drums none of the above
+ee am  |  ame pa _ ae er 4 8 e pe 3 1 a vd 7 ff cme a aoe 9 a 4 is vi fa hy mu en y z 2 ats as a ocha op eyes oes ole eoe eee n
+ee ee am  |  art bay ve ps os or te 1 rr ao a ey jan ie a lf 4 d n a a _ trs a a ne ww aa
+._el oe swaovswxvwowmesS sssSsS9S9aasSsmsSsSsSsSsSSsS3S3S3S3S3S393938383898900g  |  ay aos playe 5 mv 4 i oe f e ear aoe f so 4 ait 5 q nee ol moe ee 28 r f vv w
+le  |  ay z i ay ta 7 i sf me a ee a ae wf _ ad i js s wt me a i nee ee o ae ay 4 _ ss v gg c ey f vw f a are _ tee we q fr www b if f oy k yaw ak or ed y og eof lee 7 l a is oe 4 i _ oo 7 wr ths fae ed a ae _ _ aid coat 4b oman aes 4 oo im ws ce oe ea i fis y hf ae f h j wate a ta a av _ ia a r d me s les we oo sy aes st _ ty _ war a ee wv 7 ted o ly is 7 os my 3 gi
 w Bass/Vocal  |  bass vocal trumpet tenor saxophone none of the above
+YW acoustic roots  |  bebop principles electric instruments none of the above
+Y Collective improvisation  |  big band instrumentation return to acoustic roots passive rhythm section
 WwW Chick Corea  |  bill evans sonny rollins none of the above
 Ww Mahavishnu Orchestra  |  charlie parker quintet count basie orchestra none of the above
 Y Rhythmic rock grooves  |  clarinet banjo tuba collective improvisation in all instruments none of the above
+Y One chord for a long period of time  |  clarinet banjo tuba electric instruments missing musical elements such as tempo harmony or form
+Y Missing musical elements such as tempo, harmony, or form  |  clarinet banjo tuba electric instruments none of the above
+Y Missing musical elements such as tempo, harmony, or form  |  clarinet banjo tuba one chord for a long time none of the above
+WY Collective improvisation in all instruments  |  clarinet banjo tuba rhythmic rock grooves none of the above
+ee eee ago _  |  cm 8 va ky ae 4c qe i os ow ft q x an a iy lo rn es me to wo ors inline te jt 7 oy ae a be 4 a
+Y Return to acoustic roots with emphasis on early jazz styles  |  collective improvisation in all instruments electric instruments none of the above
+Y One chord for a long period of time  |  collective improvisation in the front line clarinet banjo tuba missing musical elements such as tempo harmony or form
 d,
 Weather Report | ‘. ”
 AAt
@@ -20,9 +52,23 @@ AAt
 Whi? © -
 Ar | |i “
 WY Weather Report  |  dizzy gillespie big band charlie parker with strings none of the above
+Y motivic development  |  dropping bombs chaos none of the above
 WY Weather Report  |  duke ellington orchestra dizzy gillespie big band charlie parker with strings
+SS vv  hh a  |  ee a jere sool ff deigsicelk jazz cerego solver offline oo x os oe a oo moe ae
+YW acoustic roots  |  electric instruments bebop principles none of the above
+YW acoustic roots  |  electric instruments bebop principles r b genres
+Y Missing musical elements such as tempo, harmony, or form  |  electric instruments clarinet banjo tuba one chord for a long time
+Y Return to acoustic roots with emphasis on early jazz styles  |  electric instruments collective improvisation in all instruments none of the above
+Y Missing musical elements such as tempo, harmony, or form  |  electric instruments one chord for a long time none of the above
+YW acoustic roots  |  electric instruments r b genres bebop principles
+Y Clarinet, banjo, tuba  |  electric keyboard electric guitar alto sax trumpet piano none of the above
+Y Clarinet, banjo, tuba  |  electric keyboard electric guitar piano bass drums trumpet trombone tenor sax
+Y Clarinet, banjo, tuba  |  electric keyboard electric guitar trumpet trombone tenor sax none of the above
+Ls 020 0007WYreeeooewrrr eewwm_ Sn i, ee ee  |  f oe ft an ww lo fr e 4 n a th y aon mm e e zt lage f s aa a fod _ eee re rn ay e a ee 2 a ad oe ae lt am ta _ l ope os rpiccaed 4 i we r rd ye en _ ot r f pe neen a ee eet k ars qe nn as
 Y Alto Saxophone  |  guitar piano none of the above ne ee ne
 Y Alto Saxophone  |  guitar tenor saxophone none of the above
+ee ee  |  head an fh bg ng ve e l noe p 4 j ty y on a p yw fone r a a oe v f to ee ol at ey baie e leet ss cp ara x ts t 1 ot on 73 3 a e rs eal 2 os oe e me fe we wee es é ae ed a ot pei os a
+le  |  i r r eee pn my vv ss ze ae a a 4 oe 4 n
 wv ?
 ; z
 ¢ fi d
@@ -50,12 +96,44 @@ ae
 
 Mahavishnu Orchestra : pe? bene
 ; 3 +
+SS vv  hh a  |  in i me van a ss e le y aie age a coe stefan a wae vl ae gr oa evs 7 4 tw ce at tn a i lo oe ae a co ee rae ot eae ee ey ee oo oe _ b oy le eee we o en f_ a 4 en tlt a 4s a re nd ney a tf pay _eep fe
+a ee  |  is oes ta ov on se a ws ia 4 fac sr vi pee te y ae x are as f ret lesh or x rd a cee pe ps yy n a
+Y trumpet, clarinet and trombone  |  lead vocals and rap artist trumpet and tenor sax none of the above
 Y Wynton Marsalis  |  louis armstrong chet baker none of the above
+ee Li  |  mintor ah a gs 5a a 7 on a is aa awe x o i a p a i p al 4 i an a bebop pjevaa détesic ct _ et
+Y Return to acoustic roots with emphasis on early jazz styles  |  missing musical elements such as tempo harmony or form collective improvisation in all instruments none of the above
+Y Return to acoustic roots with emphasis on early jazz styles  |  missing musical elements such as tempo harmony or form electric instruments collective improvisation in all instruments
+ee i fn  |  ok ad idee tn yy 4 on oo 4 tn a re y oe ieee 8 i a tg 7 weet ae a eo 4a oy a wet ves _ aa 4 ae a le ee s mn as i yo we 4 fe ne ee 7 lc save vs rea ra eq eee ly
+Y Missing musical elements such as tempo, harmony, or form  |  one chord for a long time electric instruments clarinet banjo tuba
+Ww banjo, tuba  |  piano bass accordion violin none of the above
+Y Clarinet, banjo, tuba  |  piano bass drums trumpet trombone tenor sax none of the above
 Y Guitar/Composer  |  piano composer guitar composer piano keyboard none of the above
 Y Guitar/Composer  |  piano composer guitar composer trumpet none of the above
 Y Alto Saxophone  |  piano guitar none of the above
 ooOoao SS ee 0O a0OO  oO0aEeyeowa   (aao oOo0aoaoaoavr'/ eee  |  po oad oe v 7 ape p ll a sd tones td tong 6 indi _ fy t 5 ares 5 _ 2 oe ge a a4 z ee 4 nee ol made ce ef m a a db fee us sa ie 53 ee vas s bots a aa i j ys a ae s ra 4 7 a i i ws toa ge ees i ff va 0 ws yu yy os bg dos or y a i pe e i _ lt e es fe tat ay aon oe i eee aw terrell 7 a fo eee 7 t 7
+le  |  py f ae ly ar lseine 7 fogygte sn ae r ae é 4 aa 4
+YW acoustic roots  |  r b genres bebop principles none of the above
+YW acoustic roots  |  r b genres electric instruments none of the above
+ago _  eee  |  r wagrer e e or m i y a o a e _ jazz baa eso ma on é _ _ _ 2 2 i i
 WY Electric instruments and electric effects  |  return to acoustic roots with emphasis on early jazz styles collective improvisation in all instruments none of the above
+Y Return to acoustic roots with emphasis on early jazz styles  |  rhythmic rock grooves collective improvisation in all instruments none of the above
+WY Collective improvisation in all instruments  |  rhythmic rock grooves electric effects none of the above
+Y Return to acoustic roots with emphasis on early jazz styles  |  rhythmic rock grooves electric instruments missing musical elements such as tempo harmony or form
+Y One chord for a long period of time  |  rhythmic rock grooves electric instruments none of the above
+Y motivic development  |  rock influence chaos dropping bombs
+eee fn  ee ee  |  rs page i pa he i fee fe pa ats rd a a ém e ae l ay nn a n ie oe _ a
+am  ee  |  ry ns p ll a az ab e ers 4 am a si one ce awe es a af 4 i ag a og oo sy nes ki av 1 ae a nue e ey se om ve we es a ee 7 1 a os 3 an o i a n n
+ee eee ago _  |  s ew v4 y ny mo 4 zt c lss is oo a le wee co i j arpa ss e _ t in ts 7 vee ww weed 4 bea
+Y motivic development  |  sheets of sound chaos dropping bombs
 Y Alto Saxophone  |  tenor saxophone piano none of the above ne ee ne
 w Bass/Vocal  |  tenor saxophone trumpet piano composer none of the above
+Ww banjo, tuba  |  trumpet clarinet accordion violin none of the above
+._el oe swaovswxvwowmesS sssSsS9S9aasSsmsSsSsSsSsSSsS3S3S3S3S3S393938383898900g  |  uw 1 x i i ry aaa aa co oe vb ep sa t pee ee le ay bi 4 v af ed o 2 a te
+am  ee  |  we a wt is a fs a aa ee 4 y d cap ro fol aiteal reha 2 lies pos cassieal kr ent eats
+am  eee ee i  |  wey hams era med te a 1 _ eae g dp as em _ 4 rs ly st rp _ i _ 7 ce sf i 1 ig b fer ae _ 7 s k ae he eg s aa ee 4 oe set 2 3 ps s code a e le ae
+ago _  ee  |  wi rise o9318 9993 ain ah so heer jazz levee evan _ sie_ o eeeff er oe
+ee nn o ./saqm-oENNNN._TovVTVoVoOOAVMDATWwNoooaEOEOEOEOEOEOEOEOououuu 0 _qe Dw  |  wv f aft 5 s p 4 ea ee ia ole ek wv 7 a ae le a oe 3 ar oe het aoe ee i _ b oe _ a oe r o o mw t ov p z ey d bd a é de a a
+TT lo FF FF FFF (0, SSS ys  |  wv t i 7 4 7 fag ay 7 o y r eo f _ _ a rd a t rv 0 tews ae we a y f a w wt sar 8 es ae vy 4 i _ iv lo me a it mn i s a a ee res 7 i a to en rop khari 7 mae see a ra a wis f os une le ats f a _ an ace 3 ard om ab ee 3 qa oy bm 4 4 nf on a_i t we i am 4 aa iad t _ a a 4 4 or ss aaa fe
 WwW Herbie Hancock  |  wynton marsalis duke ellington dizzy gillespie ne ee ne
+le  |  é 2 q ol ie ae i an wr s q 7 ee we i panel ciel a oe a poot he pe qe eel ae ee om eee sd hee pt i tae set ns n _ tee ies rs is b i te y y ee yh oe 7 ne cee a ag se wpe nee ao ee am 5 a ete 7 a ko rt aoe t uy d sn be a se _ be 5 es é t actor aoe 5 aaa cma its 1 7
+ago _  ce ee ee  |  é es se ee rs ss x n p wa 7 a _ eet f a ee os ot a ola
