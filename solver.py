@@ -442,80 +442,68 @@ class SolverApp:
         q_region   = calib["question_region"]
         c_region   = calib["choices_region"]
         know_it_xy = tuple(calib["know_it_xy"])
-        got_it_xy  = tuple(calib["got_it_xy"])
         regions    = {"question": q_region, "choices": c_region}
         from ocr_engine import ocr_region
         from rapidfuzz  import fuzz, process as rfp
 
-        idle_count = 0
-
-        # Cursor starts parked on the button — stays there except when
-        # clicking an answer choice on a question page.
+        # Cursor starts parked on the button.
         self._park_cursor(*know_it_xy)
 
         while not self._stop_event.is_set():
             try:
-                # Button label is the ONLY signal used to classify the page.
                 label = read_button_label(know_it_xy)
 
+                # ══ NO BUTTON — choose-choice / image question page ═══════════
+                # Button gone means Cerego is waiting for us to pick a choice.
+                if label == "unknown":
+                    sw, sh = pyautogui.size()
+                    self._log("No button — choose-choice page, clicking center")
+                    self._click_on_chrome(sw // 2, sh // 2)
+                    time.sleep(CLICK_DELAY)
+                    continue   # re-check label immediately
+
                 # ══ INFO CARD — "Got It" button present ═══════════════════════
-                # Rule: cursor NEVER leaves got_it_xy. Click first, learn second.
+                # Memorise the card content, then spam-click until page changes.
                 if label == "got_it":
-                    idle_count = 0
-
-                    # Click Got It immediately — highest priority action
-                    self._click_on_chrome(*got_it_xy)
-                    time.sleep(0.2)
-
-                    # OCR the card content while still on the button
                     subject    = ocr_region(q_region, psm=6).strip()
                     descriptor = ocr_region(c_region, psm=6).strip()
                     if subject and descriptor:
                         self._feedback.record(subject,    descriptor)
                         self._feedback.record(descriptor, subject)
-                        self._log(f"[Info card] {subject}  →  {descriptor}  (memorised)")
+                        self._log(f"[Info card] {subject}  →  {descriptor}")
                     else:
                         self._log("[Info card] — could not read content")
 
-                    # Keep spam-clicking Got It until the page advances
-                    for _ in range(4):
-                        if self._stop_event.is_set():
-                            break
-                        self._click_on_chrome(*got_it_xy)
-                        time.sleep(0.25)
-                    time.sleep(ADVANCE_DELAY)
-
                 # ══ QUESTION — "Know It" button present ═══════════════════════
+                # Answer the question, then fall through to the spam loop below.
                 elif label == "know_it":
-                    idle_count = 0
                     question_text = ocr_region(q_region, psm=6)
 
-                    # Completion check — only ever runs on question pages
+                    # Completion check
                     if any(kw in question_text.lower() for kw in
                            ["well done", "assignment complete", "you completed",
                             "finished", "great job", "all done"]):
                         self._log("Assignment complete!")
                         self._set_status("Done — assignment complete")
                         break
-                    choices       = find_answer_choices(c_region)
+
+                    choices = find_answer_choices(c_region)
 
                     if choices:
-                        # ── Multiple-choice: pick the best answer ──────────────
                         choice_texts    = [c.text for c in choices]
                         feedback_answer = self._feedback.query(question_text)
+                        chosen          = None
 
                         if feedback_answer:
                             m = rfp.extractOne(
                                 feedback_answer, choice_texts,
-                                scorer=fuzz.token_set_ratio
+                                scorer=fuzz.token_set_ratio,
                             )
                             if m and m[1] >= 60:
                                 chosen = choices[choice_texts.index(m[0])]
                                 source = "[Cerego memory]"
-                            else:
-                                feedback_answer = None
 
-                        if not feedback_answer:
+                        if not chosen:
                             best_text, conf = self._kb.query(question_text, choice_texts)
                             m      = rfp.extractOne(best_text, choice_texts,
                                                     scorer=fuzz.token_set_ratio)
@@ -526,11 +514,11 @@ class SolverApp:
                         self._log(f"Q: {question_text[:80]}")
                         self._log(f"→ {chosen.text}  {source}")
 
-                        # Click the chosen answer (only time cursor leaves button)
+                        # Click the answer (only time cursor leaves the button)
                         self._click_on_chrome(chosen.cx, chosen.cy)
                         time.sleep(CLICK_DELAY)
 
-                        # Read Cerego's green/red feedback boxes
+                        # Read Cerego's green / red feedback
                         verdict, cerego_correct = detect_answer_feedback(regions)
                         if verdict == "correct":
                             self._feedback.record(question_text, chosen.text)
@@ -543,23 +531,21 @@ class SolverApp:
                                 self._log("  Cerego: WRONG — correct answer not readable")
 
                     else:
-                        # ── No choice boxes (image/visual question) ────────────
-                        # Click center of screen as a best-effort guess
+                        # Visual / no-text-choices question
                         sw, sh = pyautogui.size()
                         self._log(f"Q: {question_text[:80]}  [visual — clicking center]")
                         self._click_on_chrome(sw // 2, sh // 2)
+                        time.sleep(CLICK_DELAY)
 
-                    # Click Know It — cursor returns to and stays on button
+                # ── Spam-click the green button until the page changes ─────────
+                # This handles Got It, Know It (after answering), and the Next
+                # button on feedback screens — all share the same screen position.
+                while not self._stop_event.is_set():
                     self._click_on_chrome(*know_it_xy)
-                    time.sleep(ADVANCE_DELAY)
-
-                # ══ NO BUTTON VISIBLE = choose-choice question page ══════════
-                else:
-                    idle_count = 0
-                    sw, sh = pyautogui.size()
-                    self._log("No button detected — clicking center of screen")
-                    self._click_on_chrome(sw // 2, sh // 2)
-                    time.sleep(CLICK_DELAY)
+                    time.sleep(0.3)
+                    new_label = read_button_label(know_it_xy)
+                    if new_label != label:
+                        break   # page has changed — return to outer loop
 
             except pyautogui.FailSafeException:
                 self._log("Emergency stop (mouse moved to top-left corner).")
