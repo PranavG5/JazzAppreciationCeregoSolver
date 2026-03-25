@@ -551,6 +551,7 @@ class SolverApp:
                 # ══ LOADING / TRANSITION ══════════════════════════════════════
                 else:
                     idle_count += 1
+                    self._log(f"Waiting for page… (idle #{idle_count})")
                     if idle_count >= MAX_IDLE:
                         self._log(
                             f"\nPaused — page not detected after {MAX_IDLE} attempts.\n"

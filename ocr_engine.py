@@ -236,26 +236,58 @@ def detect_screen_state(regions: dict) -> str:
 
 def read_button_label(button_xy: tuple) -> str:
     """
-    OCR a small region centred on the bottom-right button to determine
-    whether it says 'Got It' (info card) or 'Know It' (question).
+    Detect whether the bottom-right button says 'Got It' or 'Know It'
+    by scanning pixel colors — NO OCR needed.
 
-    Returns 'got_it' | 'know_it' | 'unknown'.
+    The button is always green.  We look for green pixels in the region.
+    Then we sample whether the NEIGHBORING area to the LEFT contains a
+    second button ('Don't Know It' = question page) or not (info card).
+
+    Logic:
+      - Green button present + 'Don't Know It' button to its left → Know It (question)
+      - Green button present, no second button nearby             → Got It  (info card)
+      - No green button detected                                  → unknown (loading)
     """
-    x, y   = button_xy
-    region = {"x": max(0, x - 80), "y": max(0, y - 28), "w": 160, "h": 56}
-    text   = ocr_region(region, psm=8).lower().strip()   # psm 8 = single word
+    x, y = button_xy
 
-    if "got" in text:
-        return "got_it"
-    if "know" in text:
-        return "know_it"
-    # psm 8 can miss multi-word labels — try full-line mode as fallback
-    text2 = ocr_region(region, psm=7).lower().strip()
-    if "got" in text2:
-        return "got_it"
-    if "know" in text2:
-        return "know_it"
-    return "unknown"
+    # ── Sample the green button itself ────────────────────────────────────────
+    btn_region = {"x": max(0, x - 90), "y": max(0, y - 30), "w": 180, "h": 60}
+    img        = capture_region(btn_region).convert("RGB")
+    w, h       = img.size
+
+    green_count = 0
+    for py in range(0, h, 4):
+        for px in range(0, w, 4):
+            r, g, b = img.getpixel((px, py))
+            if g > r + 20 and g > b + 20 and g > 100:
+                green_count += 1
+
+    total_samples = (h // 4) * (w // 4) or 1
+    if green_count / total_samples < 0.08:
+        return "unknown"   # no green button visible yet (loading)
+
+    # ── Check for 'Don't Know It' button to the left of the green button ──────
+    # On question pages, there is a second grey/white button ~200px to the left.
+    # On info-card pages, the green button is the only one.
+    left_region = {"x": max(0, x - 300), "y": max(0, y - 30), "w": 160, "h": 60}
+    left_img    = capture_region(left_region).convert("RGB")
+    lw, lh      = left_img.size
+
+    # Count non-white, non-background pixels (a button has a border/fill)
+    filled = 0
+    for py in range(0, lh, 4):
+        for px in range(0, lw, 4):
+            r, g, b = left_img.getpixel((px, py))
+            brightness = (r + g + b) / 3
+            # Not pure white background (>245) and not transparent
+            if brightness < 235:
+                filled += 1
+
+    left_samples = (lh // 4) * (lw // 4) or 1
+    if filled / left_samples > 0.12:
+        return "know_it"   # second button visible → question page
+    else:
+        return "got_it"    # only the green button → info card
 
 
 # ── Post-answer feedback detector ─────────────────────────────────────────────
