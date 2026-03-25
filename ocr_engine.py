@@ -232,6 +232,32 @@ def detect_screen_state(regions: dict) -> str:
     return ScreenState.LOADING
 
 
+# ── Button label reader ───────────────────────────────────────────────────────
+
+def read_button_label(button_xy: tuple) -> str:
+    """
+    OCR a small region centred on the bottom-right button to determine
+    whether it says 'Got It' (info card) or 'Know It' (question).
+
+    Returns 'got_it' | 'know_it' | 'unknown'.
+    """
+    x, y   = button_xy
+    region = {"x": max(0, x - 80), "y": max(0, y - 28), "w": 160, "h": 56}
+    text   = ocr_region(region, psm=8).lower().strip()   # psm 8 = single word
+
+    if "got" in text:
+        return "got_it"
+    if "know" in text:
+        return "know_it"
+    # psm 8 can miss multi-word labels — try full-line mode as fallback
+    text2 = ocr_region(region, psm=7).lower().strip()
+    if "got" in text2:
+        return "got_it"
+    if "know" in text2:
+        return "know_it"
+    return "unknown"
+
+
 # ── Post-answer feedback detector ─────────────────────────────────────────────
 
 def detect_answer_feedback(regions: dict) -> tuple[str, str]:

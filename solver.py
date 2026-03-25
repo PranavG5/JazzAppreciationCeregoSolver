@@ -32,8 +32,8 @@ from knowledge   import KnowledgeBase, FeedbackStore
 from ocr_engine  import (
     check_tesseract,
     find_answer_choices,
-    detect_screen_state,
     detect_answer_feedback,
+    read_button_label,
     ScreenState,
 )
 
@@ -445,28 +445,34 @@ class SolverApp:
         got_it_xy  = tuple(calib["got_it_xy"])
         regions    = {"question": q_region, "choices": c_region}
         from ocr_engine import ocr_region
-        from rapidfuzz import fuzz, process as rfp
+        from rapidfuzz  import fuzz, process as rfp
 
         idle_count = 0
 
-        # Park cursor at Know It / Got It button immediately — stays there
-        # except when clicking an answer choice.
+        # Cursor starts parked on the button — stays there except when
+        # clicking an answer choice on a question page.
         self._park_cursor(*know_it_xy)
 
         while not self._stop_event.is_set():
             try:
-                state = detect_screen_state(regions)
+                # ── Read the green button label — this is the definitive signal ──
+                label = read_button_label(know_it_xy)
 
-                if state == ScreenState.COMPLETE:
+                # ── Completion check (text-based fallback) ─────────────────────
+                q_text = ocr_region(q_region, psm=6).lower()
+                if any(kw in q_text for kw in
+                       ["well done", "assignment complete", "you completed",
+                        "finished", "great job", "all done"]):
                     self._log("Assignment complete!")
                     self._set_status("Done — assignment complete")
                     break
 
-                elif state == ScreenState.INFO_CARD:
-                    # ── Park cursor at Got It, read the fact, click Got It ──────
+                # ══ INFO CARD — button says "Got It" ══════════════════════════
+                if label == "got_it":
                     idle_count = 0
-                    self._park_cursor(*got_it_xy)   # hover over Got It while reading
 
+                    # Read & memorise the fact shown on the card.
+                    # Cursor NEVER leaves the button during this entire block.
                     subject    = ocr_region(q_region, psm=6).strip()
                     descriptor = ocr_region(c_region, psm=6).strip()
 
@@ -477,78 +483,78 @@ class SolverApp:
                     else:
                         self._log("[Info card] — could not read content")
 
-                    # Click Got It (cursor is already there) then return to hover
-                    self._click_on_chrome(*got_it_xy)
+                    # Spam-click Got It (cursor stays on button the whole time)
+                    for _ in range(5):
+                        if self._stop_event.is_set():
+                            break
+                        self._click_on_chrome(*got_it_xy)
+                        time.sleep(0.25)
                     time.sleep(ADVANCE_DELAY)
-                    self._park_cursor(*know_it_xy)  # park at Know It for next card
 
-                elif state == ScreenState.QUESTION:
-                    # ── Cursor is parked at know_it_xy; move only to click answer ─
+                # ══ QUESTION — button says "Know It" ══════════════════════════
+                elif label == "know_it":
                     idle_count = 0
                     question_text = ocr_region(q_region, psm=6)
                     choices       = find_answer_choices(c_region)
 
-                    if not choices:
-                        self._log("  (no choices found — waiting)")
-                        time.sleep(IDLE_DELAY)
-                        continue
+                    if choices:
+                        # ── Multiple-choice: pick the best answer ──────────────
+                        choice_texts    = [c.text for c in choices]
+                        feedback_answer = self._feedback.query(question_text)
 
-                    choice_texts = [c.text for c in choices]
+                        if feedback_answer:
+                            m = rfp.extractOne(
+                                feedback_answer, choice_texts,
+                                scorer=fuzz.token_set_ratio
+                            )
+                            if m and m[1] >= 60:
+                                chosen = choices[choice_texts.index(m[0])]
+                                source = "[Cerego memory]"
+                            else:
+                                feedback_answer = None
 
-                    # Priority 1: Cerego's own feedback memory
-                    feedback_answer = self._feedback.query(question_text)
-                    if feedback_answer:
-                        match = rfp.extractOne(
-                            feedback_answer, choice_texts, scorer=fuzz.token_set_ratio
-                        )
-                        if match and match[1] >= 60:
-                            chosen = choices[choice_texts.index(match[0])]
-                            source = "[Cerego memory]"
-                        else:
-                            feedback_answer = None
+                        if not feedback_answer:
+                            best_text, conf = self._kb.query(question_text, choice_texts)
+                            m      = rfp.extractOne(best_text, choice_texts,
+                                                    scorer=fuzz.token_set_ratio)
+                            chosen = choices[choice_texts.index(m[0])] if m else choices[0]
+                            warn   = "  [GUESS]" if conf < 50 else ""
+                            source = f"[KB {conf:.0f}%]{warn}"
 
-                    # Priority 2: static knowledge base
-                    if not feedback_answer:
-                        best_text, confidence = self._kb.query(question_text, choice_texts)
-                        match = rfp.extractOne(
-                            best_text, choice_texts, scorer=fuzz.token_set_ratio
-                        )
-                        chosen   = choices[choice_texts.index(match[0])] if match else choices[0]
-                        conf_pct = f"{confidence:.0f}%"
-                        warn     = "  [LOW CONFIDENCE — GUESS]" if confidence < 50 else ""
-                        source   = f"[KB {conf_pct}]{warn}"
+                        self._log(f"Q: {question_text[:80]}")
+                        self._log(f"→ {chosen.text}  {source}")
 
-                    self._log(f"Q: {question_text[:80]}")
-                    self._log(f"→ {chosen.text}  {source}")
+                        # Click the chosen answer (only time cursor leaves button)
+                        self._click_on_chrome(chosen.cx, chosen.cy)
+                        time.sleep(CLICK_DELAY)
 
-                    # Click the answer choice (only non-button click in the loop)
-                    self._click_on_chrome(chosen.cx, chosen.cy)
-                    time.sleep(CLICK_DELAY)
+                        # Read Cerego's green/red feedback boxes
+                        verdict, cerego_correct = detect_answer_feedback(regions)
+                        if verdict == "correct":
+                            self._feedback.record(question_text, chosen.text)
+                            self._log("  Cerego: CORRECT — saved")
+                        elif verdict == "incorrect":
+                            if cerego_correct:
+                                self._feedback.record(question_text, cerego_correct)
+                                self._log(f"  Cerego: WRONG — correct: {cerego_correct}  (saved)")
+                            else:
+                                self._log("  Cerego: WRONG — correct answer not readable")
 
-                    # Read Cerego's visual feedback (green/red boxes)
-                    verdict, cerego_correct = detect_answer_feedback(regions)
-                    if verdict == "correct":
-                        self._feedback.record(question_text, chosen.text)
-                        self._log("  Cerego: CORRECT  — saved to memory")
-                    elif verdict == "incorrect":
-                        if cerego_correct:
-                            self._feedback.record(question_text, cerego_correct)
-                            self._log(f"  Cerego: WRONG  — correct answer: {cerego_correct}  (saved)")
-                        else:
-                            self._log("  Cerego: WRONG  — could not read correct answer")
+                    else:
+                        # ── No choice boxes (image/visual question) ────────────
+                        self._log(f"Q: {question_text[:80]}  [visual — clicking Know It]")
 
-                    # Click Know It — cursor ends here (parked for next iteration)
+                    # Click Know It — cursor returns to and stays on button
                     self._click_on_chrome(*know_it_xy)
                     time.sleep(ADVANCE_DELAY)
 
-                else:  # LOADING / OTHER
-                    # Cursor stays parked at know_it_xy — no movement
+                # ══ LOADING / TRANSITION ══════════════════════════════════════
+                else:
                     idle_count += 1
-                    self._log(f"Waiting for question… (idle #{idle_count})")
                     if idle_count >= MAX_IDLE:
                         self._log(
-                            f"\nPaused — no question found after {MAX_IDLE} attempts.\n"
-                            "Manually advance the page, then click ▶ Start again.\n"
+                            f"\nPaused — page not detected after {MAX_IDLE} attempts.\n"
+                            "Manually advance Cerego, then click ▶ Start again.\n"
                         )
                         self._set_status("Paused — waiting for user")
                         break
