@@ -551,18 +551,13 @@ class SolverApp:
                     self._click_on_chrome(*know_it_xy)
                     time.sleep(ADVANCE_DELAY)
 
-                # ══ LOADING / TRANSITION ══════════════════════════════════════
+                # ══ NO BUTTON VISIBLE = choose-choice question page ══════════
                 else:
-                    idle_count += 1
-                    self._log(f"Waiting for page… (idle #{idle_count})")
-                    if idle_count >= MAX_IDLE:
-                        self._log(
-                            f"\nPaused — page not detected after {MAX_IDLE} attempts.\n"
-                            "Manually advance Cerego, then click ▶ Start again.\n"
-                        )
-                        self._set_status("Paused — waiting for user")
-                        break
-                    time.sleep(IDLE_DELAY)
+                    idle_count = 0
+                    sw, sh = pyautogui.size()
+                    self._log("No button detected — clicking center of screen")
+                    self._click_on_chrome(sw // 2, sh // 2)
+                    time.sleep(CLICK_DELAY)
 
             except pyautogui.FailSafeException:
                 self._log("Emergency stop (mouse moved to top-left corner).")
