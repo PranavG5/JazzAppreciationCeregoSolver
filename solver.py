@@ -325,22 +325,25 @@ class SolverApp:
             key = [None]
             win = tk.Toplevel(self.root)
             win.title("Calibration")
-            win.geometry("700x260")
             win.attributes("-topmost", True)
-            win.resizable(False, False)
+            win.resizable(True, True)
 
             lbl = tk.Label(
                 win,
                 text=steps[step_idx[0]][1],
-                wraplength=640,
-                font=("Segoe UI", 18, "bold"),
+                wraplength=600,
+                font=("Segoe UI", 13),
                 justify="center",
             )
-            lbl.pack(expand=True, pady=40)
+            lbl.pack(expand=True, fill=tk.BOTH, padx=30, pady=30)
 
             prog = tk.Label(win, text="Press SPACE to record, or ESC to cancel.",
-                            fg="#888", font=("Segoe UI", 13))
-            prog.pack(pady=(0, 20))
+                            fg="#888", font=("Segoe UI", 11))
+            prog.pack(pady=(0, 16))
+
+            # Let tkinter calculate the required size, then set it
+            win.update_idletasks()
+            win.geometry(f"{win.winfo_reqwidth() + 60}x{win.winfo_reqheight() + 40}")
 
             def on_key(event):
                 if event.keysym == "space":
