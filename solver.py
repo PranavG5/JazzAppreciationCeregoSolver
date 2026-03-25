@@ -39,9 +39,9 @@ from ocr_engine  import (
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-CLICK_DELAY   = 1.2   # seconds to wait after clicking an answer
-ADVANCE_DELAY = 0.9   # seconds to wait after clicking Know It / Got It
-IDLE_DELAY    = 2.0   # seconds to wait when no question is detected
+CLICK_DELAY   = 0.4   # seconds to wait after clicking an answer
+ADVANCE_DELAY = 0.3   # seconds to wait after clicking Know It / Got It
+IDLE_DELAY    = 0.5   # seconds to wait when no question is detected
 MAX_IDLE      = 8     # consecutive idle cycles before pausing
 
 CALIB_FILE    = os.path.join(os.path.dirname(__file__), "calibration.json")
@@ -57,7 +57,7 @@ DEFAULT_CALIB = {
 }
 
 pyautogui.FAILSAFE = True
-pyautogui.PAUSE    = 0.25
+pyautogui.PAUSE    = 0.0
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -227,17 +227,15 @@ class SolverApp:
         """Temporarily drop topmost so Chrome receives the click."""
         self.root.attributes("-topmost", False)
         self.root.update()
-        time.sleep(0.15)
-        pyautogui.moveTo(x, y, duration=0.35)
+        pyautogui.moveTo(x, y, duration=0.0)
         pyautogui.click()
-        time.sleep(0.1)
         self.root.attributes("-topmost", True)
 
     def _park_cursor(self, x: int, y: int):
         """Move cursor to position without clicking — used to hover over a button."""
         self.root.attributes("-topmost", False)
         self.root.update()
-        pyautogui.moveTo(x, y, duration=0.25)
+        pyautogui.moveTo(x, y, duration=0.0)
         self.root.attributes("-topmost", True)
 
     def _check_tesseract_async(self):
@@ -573,7 +571,7 @@ class SolverApp:
                 # button on feedback screens — all share the same screen position.
                 while not self._stop_event.is_set():
                     self._click_on_chrome(*know_it_xy)
-                    time.sleep(0.3)
+                    time.sleep(0.1)
                     new_label = read_button_label(know_it_xy)
                     if new_label != label:
                         break   # page has changed — return to outer loop
