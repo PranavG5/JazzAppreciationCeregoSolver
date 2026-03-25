@@ -192,19 +192,18 @@ class SolverApp:
         # ── PDF loader ─────────────────────────────────────────────────────
         pdf_frame = tk.Frame(root, padx=16, pady=6)
         pdf_frame.pack(fill=tk.X)
-        _pdf_hint = "No slides PDF loaded  (optional — improves accuracy)" if _PDF_AVAILABLE else "Install pdfplumber to enable PDF slides"
+        _pdf_hint = "No slides loaded (optional)" if _PDF_AVAILABLE else "Install pdfplumber to enable PDF slides"
         self.pdf_label = tk.Label(
             pdf_frame, text=_pdf_hint, anchor="w",
-            fg="#888", font=("Segoe UI", 11)
+            fg="#888", font=("Segoe UI", 11), wraplength=400, justify="left"
         )
         self.pdf_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
         self.pdf_btn = tk.Button(
             pdf_frame,
-            text="Load Slides PDF",
+            text="Load PDF",
             font=("Segoe UI", 11, "bold"), relief=tk.FLAT,
-            bg="#2980b9", fg="white", padx=10, pady=4,
+            bg="#2980b9", fg="white", padx=12, pady=4,
             command=self._load_pdf,
-            state=tk.NORMAL if _PDF_AVAILABLE else tk.DISABLED,
         )
         self.pdf_btn.pack(side=tk.RIGHT, padx=(6, 0))
 
@@ -311,7 +310,10 @@ class SolverApp:
 
     def _load_pdf(self):
         if not _PDF_AVAILABLE:
-            self._log("⚠  pdfplumber not installed. Run:  pip install pdfplumber")
+            self._log("⚠  pdfplumber not installed.")
+            self._log("   Run:  python -m pip install pdfplumber")
+            self._log("   Then restart the solver.\n")
+            self.pdf_label.config(text="Run: python -m pip install pdfplumber", fg="#e74c3c")
             return
         path = filedialog.askopenfilename(
             title="Select course slides PDF",
