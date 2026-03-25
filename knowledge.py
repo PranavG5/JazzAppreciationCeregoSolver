@@ -7,6 +7,7 @@ No API keys required.
 """
 
 import csv
+import json
 import os
 import re
 from dataclasses import dataclass
@@ -181,3 +182,60 @@ def _norm(text: str) -> str:
     text = re.sub(r"[^\w\s]", " ", text)
     text = re.sub(r"\s+", " ", text)
     return text.strip()
+
+
+# ── Feedback store ────────────────────────────────────────────────────────────
+
+class FeedbackStore:
+    """
+    Remembers Cerego's right/wrong verdicts and maps questions to their
+    confirmed correct answers.  Persisted to feedback.json so knowledge
+    survives between sessions.  Always queried before the static knowledge
+    base — Cerego's ground truth takes highest priority.
+    """
+
+    def __init__(self, path: str):
+        self._path  = path
+        self._store: dict[str, str] = {}   # norm_question → correct_answer
+        self._load()
+
+    def _load(self):
+        if os.path.isfile(self._path):
+            try:
+                with open(self._path, encoding="utf-8") as f:
+                    self._store = json.load(f)
+            except Exception:
+                self._store = {}
+
+    def _save(self):
+        with open(self._path, "w", encoding="utf-8") as f:
+            json.dump(self._store, f, indent=2, ensure_ascii=False)
+
+    def record(self, question: str, correct_answer: str):
+        """Save the confirmed correct answer for this question and persist."""
+        if not question.strip() or not correct_answer.strip():
+            return
+        self._store[_norm(question)] = correct_answer.strip()
+        self._save()
+
+    def query(self, question: str) -> str | None:
+        """
+        Return the confirmed correct answer if known, else None.
+        Uses fuzzy matching so minor OCR variations still hit the record.
+        """
+        if not self._store:
+            return None
+        key = _norm(question)
+        # Exact normalised match first (fast path)
+        if key in self._store:
+            return self._store[key]
+        # Fuzzy match — require high similarity (≥ 88) to avoid false hits
+        if _RAPIDFUZZ_OK:
+            keys  = list(self._store.keys())
+            match = rfprocess.extractOne(key, keys, scorer=fuzz.token_set_ratio)
+            if match and match[1] >= 88:
+                return self._store[match[0]]
+        return None
+
+    def size(self) -> int:
+        return len(self._store)

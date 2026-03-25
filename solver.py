@@ -28,11 +28,12 @@ from tkinter import scrolledtext, filedialog, messagebox
 
 import pyautogui
 
-from knowledge   import KnowledgeBase
+from knowledge   import KnowledgeBase, FeedbackStore
 from ocr_engine  import (
     check_tesseract,
     find_answer_choices,
     detect_screen_state,
+    detect_answer_feedback,
     ScreenState,
 )
 
@@ -44,6 +45,7 @@ IDLE_DELAY    = 2.0   # seconds to wait when no question is detected
 MAX_IDLE      = 8     # consecutive idle cycles before pausing
 
 CALIB_FILE    = os.path.join(os.path.dirname(__file__), "calibration.json")
+FEEDBACK_FILE = os.path.join(os.path.dirname(__file__), "feedback.json")
 
 # Sensible defaults for a 1920×1080 screen at 100 % DPI.
 # Used only when calibration.json is absent.
@@ -82,14 +84,16 @@ class SolverApp:
         self.root.resizable(True, True)
         self.root.attributes("-topmost", True)
 
-        self._kb    = KnowledgeBase()
-        self._calib = load_calibration()
+        self._kb       = KnowledgeBase()
+        self._feedback = FeedbackStore(FEEDBACK_FILE)
+        self._calib    = load_calibration()
         self._stop_event = threading.Event()
 
         self._build_gui()
 
         # Check Tesseract on startup (non-blocking)
         self.root.after(300, self._check_tesseract_async)
+        self.root.after(400, self._update_feedback_label)
 
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         self.root.lift()
@@ -236,6 +240,11 @@ class SolverApp:
         except RuntimeError as e:
             self._log(f"WARNING — Tesseract not found:\n{e}\n")
             self._set_status("Tesseract missing — see log")
+
+    def _update_feedback_label(self):
+        n = self._feedback.size()
+        if n > 0:
+            self._log(f"Cerego feedback memory: {n} question(s) with confirmed answers\n")
 
     # ── Start / Stop ───────────────────────────────────────────────────────
 
@@ -462,26 +471,56 @@ class SolverApp:
                         continue
 
                     choice_texts = [c.text for c in choices]
-                    best_text, confidence = self._kb.query(question_text, choice_texts)
 
-                    # Find the AnswerChoice object that matches best_text
+                    # ── Priority 1: Cerego's own feedback memory ──────────────
                     from rapidfuzz import fuzz, process as rfp
-                    match = rfp.extractOne(
-                        best_text, choice_texts, scorer=fuzz.token_set_ratio
-                    )
-                    if match:
-                        idx = choice_texts.index(match[0])
-                        chosen = choices[idx]
-                    else:
-                        chosen = choices[0]   # last-resort: first choice
+                    feedback_answer = self._feedback.query(question_text)
+                    if feedback_answer:
+                        match = rfp.extractOne(
+                            feedback_answer, choice_texts, scorer=fuzz.token_set_ratio
+                        )
+                        if match and match[1] >= 60:
+                            idx    = choice_texts.index(match[0])
+                            chosen = choices[idx]
+                            source = "[Cerego memory]"
+                        else:
+                            feedback_answer = None   # match too weak, fall through
 
-                    conf_pct = f"{confidence:.0f}%"
-                    warn     = "  [LOW CONFIDENCE — GUESS]" if confidence < 50 else ""
+                    # ── Priority 2: Static knowledge base ─────────────────────
+                    if not feedback_answer:
+                        best_text, confidence = self._kb.query(question_text, choice_texts)
+                        match = rfp.extractOne(
+                            best_text, choice_texts, scorer=fuzz.token_set_ratio
+                        )
+                        if match:
+                            idx    = choice_texts.index(match[0])
+                            chosen = choices[idx]
+                        else:
+                            chosen = choices[0]
+                        conf_pct = f"{confidence:.0f}%"
+                        warn     = "  [LOW CONFIDENCE — GUESS]" if confidence < 50 else ""
+                        source   = f"[KB {conf_pct}]{warn}"
+
                     self._log(f"Q: {question_text[:80]}")
-                    self._log(f"→ {chosen.text}  [confidence: {conf_pct}]{warn}")
+                    self._log(f"→ {chosen.text}  {source}")
 
                     self._click_on_chrome(chosen.cx, chosen.cy)
+
+                    # ── Wait for Cerego to show feedback, then read it ─────────
                     time.sleep(CLICK_DELAY)
+                    verdict, cerego_correct = detect_answer_feedback(regions)
+
+                    if verdict == "correct":
+                        self._feedback.record(question_text, chosen.text)
+                        self._log(f"  Cerego: CORRECT  — saved to memory")
+                    elif verdict == "incorrect":
+                        if cerego_correct:
+                            self._feedback.record(question_text, cerego_correct)
+                            self._log(f"  Cerego: WRONG  — correct answer: {cerego_correct}  (saved)")
+                        else:
+                            self._log(f"  Cerego: WRONG  — could not read correct answer from screen")
+                    # If "unknown" Cerego hasn't shown feedback yet or OCR missed it — just continue
+
                     self._click_on_chrome(*know_it_xy)
                     time.sleep(ADVANCE_DELAY)
 

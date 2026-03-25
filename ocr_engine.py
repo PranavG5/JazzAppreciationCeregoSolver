@@ -6,6 +6,7 @@ No API keys required.
 """
 
 import os
+import re
 from dataclasses import dataclass
 
 from PIL import Image, ImageFilter, ImageOps
@@ -229,3 +230,60 @@ def detect_screen_state(regions: dict) -> str:
         return ScreenState.INFO_CARD
 
     return ScreenState.LOADING
+
+
+# ── Post-answer feedback detector ─────────────────────────────────────────────
+
+def detect_answer_feedback(regions: dict) -> tuple[str, str]:
+    """
+    Call this AFTER clicking an answer choice, before clicking Know It.
+    Cerego briefly shows whether the answer was correct and (if wrong)
+    reveals the correct answer.
+
+    OCRs both the question region and the choices region, then searches for
+    verdict keywords and patterns that reveal the correct answer text.
+
+    Returns:
+        (verdict, correct_answer)
+        verdict       — "correct" | "incorrect" | "unknown"
+        correct_answer — the correct answer text, or "" if not extractable
+    """
+    q_text = ocr_region(regions["question"], psm=6)
+    c_text = ocr_region(regions["choices"],  psm=11)
+    combined = (q_text + "\n" + c_text).strip()
+    lower    = combined.lower()
+
+    # ── Verdict ───────────────────────────────────────────────────────────────
+    correct_kw   = ["correct!", "that's right", "you got it", "nicely done",
+                    "great job", "well done", "right!"]
+    incorrect_kw = ["incorrect", "that's not right", "not quite", "wrong",
+                    "the correct answer", "the answer is", "the answer was",
+                    "actually,", "actually the"]
+
+    verdict = "unknown"
+    if any(kw in lower for kw in correct_kw):
+        verdict = "correct"
+    elif any(kw in lower for kw in incorrect_kw):
+        verdict = "incorrect"
+
+    # ── Extract the revealed correct answer ───────────────────────────────────
+    correct_answer = ""
+    patterns = [
+        r"the correct answer (?:is|was)[:\s]+(.+)",
+        r"the answer (?:is|was)[:\s]+(.+)",
+        r"correct answer[:\s]+(.+)",
+        r"actually[,\s]+(?:the answer is\s*)?(.+)",
+        r"correct[!:\s]+([A-Z].{3,60})",   # capitalised phrase after "Correct!"
+    ]
+    for pat in patterns:
+        m = re.search(pat, lower)
+        if m:
+            # Pull the same span from the original (non-lowercased) text for
+            # proper casing, then strip trailing noise.
+            raw = combined[m.start(1):m.end(1)].strip()
+            raw = re.split(r"[\n\r]", raw)[0].strip()   # first line only
+            if 2 < len(raw) < 120:
+                correct_answer = raw
+                break
+
+    return verdict, correct_answer
