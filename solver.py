@@ -24,9 +24,14 @@ import tkinter as tk
 from tkinter import scrolledtext, filedialog
 
 import anthropic
-import pdfplumber
 import pyautogui
 from PIL import Image
+
+try:
+    import pdfplumber
+    _PDF_AVAILABLE = True
+except ImportError:
+    _PDF_AVAILABLE = False
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 CLICK_DELAY   = 1.2   # wait after clicking an answer  (seconds)
@@ -44,29 +49,37 @@ You are an expert assistant solving Cerego flashcard assignments for a Jazz Appr
 
 {knowledge_section}
 
-You will receive a screenshot of the Cerego quiz interface. Identify the current question and
-select the correct answer. Prefer answers from the course material above when available;
-fall back to general jazz knowledge only if needed.
+You will receive a screenshot of the Cerego quiz interface.
+
+Cerego has two distinct screen types — you MUST identify which type this is:
+
+1. INFO CARD: The screen is simply presenting a fact to memorize (e.g. "Louis Armstrong - Trumpet").
+   There is NO question being asked. The only action button is "Got It" (usually bottom-right).
+   → Set page_type = "info_card" and set click_x/click_y to the center of the "Got It" button.
+
+2. QUESTION: The screen asks the user something (e.g. "Can you name an album by this artist?",
+   multiple-choice answers, fill-in-the-blank, matching, etc.).
+   The advance button is "Know It" (bottom-right), NOT "Got It".
+   → Set page_type = "question", identify the CORRECT ANSWER option and set click_x/click_y
+     to the center of that answer choice. Prefer course material; fall back to general jazz knowledge.
 
 Return ONLY a JSON object — no markdown fences, no explanation outside the JSON:
 {{
-  "question_visible": true | false,
+  "page_type": "info_card" | "question" | "other" | null,
   "assignment_complete": true | false,
-  "question_type": "multiple_choice" | "matching" | "fill_in" | "other" | null,
-  "question_text": "<the question text, or null>",
-  "correct_answer": "<text of the correct answer option, or null>",
-  "click_x": <integer pixel x-coordinate of the answer to click, or null>,
-  "click_y": <integer pixel y-coordinate of the answer to click, or null>,
+  "question_text": "<the question text or fact label, or null>",
+  "correct_answer": "<text of the correct answer to click, or the 'Got It' label for info cards, or null>",
+  "click_x": <integer pixel x-coordinate to click, or null>,
+  "click_y": <integer pixel y-coordinate to click, or null>,
   "reasoning": "<one-sentence explanation>"
 }}
 
 Rules:
-- click_x / click_y must be the CENTER of the answer button you want to click.
-- If the assignment is complete (e.g. "Well done!", score screen), set assignment_complete=true.
-- If a loading screen, blank page, or non-quiz content is shown, set question_visible=false.
-- For matching/connect questions return ONE click per response (the next unmatched item).
-- Coordinates are measured from the top-left of the screenshot.
-- Provide coordinates even when uncertain — wrong answers carry no penalty.
+- Coordinates are measured from the top-left of the FULL screenshot.
+- click_x/click_y must be the CENTER of the button or answer choice to click.
+- If the assignment is complete (score screen, "Well done!"), set assignment_complete=true.
+- If a loading screen or non-quiz content is shown, set page_type="other" and click_x=null.
+- For matching questions return ONE click per response (the next unmatched item).
 """
 
 def build_answer_prompt(course_text: str) -> str:
@@ -179,17 +192,21 @@ class SolverApp:
         # ── PDF loader ─────────────────────────────────────────────────────
         pdf_frame = tk.Frame(root, padx=10, pady=2)
         pdf_frame.pack(fill=tk.X)
+        _pdf_hint = "No slides PDF loaded  (optional — improves accuracy)" if _PDF_AVAILABLE else "Install pdfplumber to enable PDF slides"
         self.pdf_label = tk.Label(
-            pdf_frame, text="No slides PDF loaded", anchor="w",
+            pdf_frame, text=_pdf_hint, anchor="w",
             fg="#888", font=("Segoe UI", 9)
         )
         self.pdf_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
-        tk.Button(
-            pdf_frame, text="Load PDF",
-            font=("Segoe UI", 9), relief=tk.FLAT,
+        self.pdf_btn = tk.Button(
+            pdf_frame,
+            text="Load Slides PDF",
+            font=("Segoe UI", 9, "bold"), relief=tk.FLAT,
             bg="#2980b9", fg="white",
             command=self._load_pdf,
-        ).pack(side=tk.RIGHT)
+            state=tk.NORMAL if _PDF_AVAILABLE else tk.DISABLED,
+        )
+        self.pdf_btn.pack(side=tk.RIGHT, padx=(6, 0))
 
         # ── Buttons ────────────────────────────────────────────────────────
         btn_frame = tk.Frame(root, padx=10, pady=4)
@@ -291,6 +308,9 @@ class SolverApp:
         self.root.destroy()
 
     def _load_pdf(self):
+        if not _PDF_AVAILABLE:
+            self._log("⚠  pdfplumber not installed. Run:  pip install pdfplumber")
+            return
         path = filedialog.askopenfilename(
             title="Select course slides PDF",
             filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")],
@@ -307,7 +327,7 @@ class SolverApp:
             self._course_text = "\n\n".join(pages)
             short = os.path.basename(path)
             self.pdf_label.config(
-                text=f"✓ {short}  ({len(pages)} pages)", fg="#27ae60"
+                text=f"Slides loaded: {short}  ({len(pages)} pages)", fg="#27ae60"
             )
             self._log(f"Loaded PDF: {short} — {len(pages)} pages of course content.\n")
         except Exception as exc:
@@ -345,33 +365,41 @@ class SolverApp:
                     self._set_status("Done — assignment complete")
                     break
 
-                if action.get("question_visible") and action.get("click_x") is not None:
+                page_type = action.get("page_type")
+                if page_type in ("info_card", "question") and action.get("click_x") is not None:
                     idle_count = 0
-                    q_text  = action.get("question_text", "")
-                    answer  = action.get("correct_answer", "")
-                    reason  = action.get("reasoning", "")
-                    cx, cy  = int(action["click_x"]), int(action["click_y"])
+                    q_text = action.get("question_text", "")
+                    answer = action.get("correct_answer", "")
+                    reason = action.get("reasoning", "")
+                    cx, cy = int(action["click_x"]), int(action["click_y"])
 
-                    self._log(f"Q: {q_text}")
-                    self._log(f"→ {answer}  [{reason}]")
-                    self._log(f"  clicking ({cx}, {cy})")
-
-                    self._click_on_chrome(cx, cy)
-                    time.sleep(CLICK_DELAY)
-
-                    # ── Phase 2: Find and click the Continue / Next button ──
-                    img2 = screenshot_b64()
-                    nxt  = call_claude(client, NEXT_PROMPT, img2)
-
-                    if nxt.get("button_found") and nxt.get("click_x") is not None:
-                        nx, ny = int(nxt["click_x"]), int(nxt["click_y"])
-                        label  = nxt.get("button_label") or "Next"
-                        self._log(f'  → "{label}" button at ({nx}, {ny})\n')
-                        self._click_on_chrome(nx, ny)
+                    if page_type == "info_card":
+                        self._log(f"[Info card] {q_text}")
+                        self._log(f"  → clicking Got It at ({cx}, {cy})\n")
+                        self._click_on_chrome(cx, cy)
                         time.sleep(ADVANCE_DELAY)
-                    else:
-                        self._log("  (no Continue button found — waiting)\n")
-                        time.sleep(IDLE_DELAY)
+                        # Info cards advance themselves — no NEXT_PROMPT needed
+
+                    else:  # question
+                        self._log(f"Q: {q_text}")
+                        self._log(f"→ {answer}  [{reason}]")
+                        self._log(f"  clicking ({cx}, {cy})")
+                        self._click_on_chrome(cx, cy)
+                        time.sleep(CLICK_DELAY)
+
+                        # ── Phase 2: Find and click Know It / Continue ──────
+                        img2 = screenshot_b64()
+                        nxt  = call_claude(client, NEXT_PROMPT, img2)
+
+                        if nxt.get("button_found") and nxt.get("click_x") is not None:
+                            nx, ny = int(nxt["click_x"]), int(nxt["click_y"])
+                            label  = nxt.get("button_label") or "Next"
+                            self._log(f'  → "{label}" button at ({nx}, {ny})\n')
+                            self._click_on_chrome(nx, ny)
+                            time.sleep(ADVANCE_DELAY)
+                        else:
+                            self._log("  (no Continue button found — waiting)\n")
+                            time.sleep(IDLE_DELAY)
 
                 else:
                     idle_count += 1
