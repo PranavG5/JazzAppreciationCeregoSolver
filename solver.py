@@ -325,22 +325,22 @@ class SolverApp:
             key = [None]
             win = tk.Toplevel(self.root)
             win.title("Calibration")
-            win.geometry("480x130")
+            win.geometry("700x260")
             win.attributes("-topmost", True)
             win.resizable(False, False)
 
             lbl = tk.Label(
                 win,
                 text=steps[step_idx[0]][1],
-                wraplength=440,
-                font=("Segoe UI", 12),
+                wraplength=640,
+                font=("Segoe UI", 18, "bold"),
                 justify="center",
             )
-            lbl.pack(expand=True, pady=20)
+            lbl.pack(expand=True, pady=40)
 
             prog = tk.Label(win, text="Press SPACE to record, or ESC to cancel.",
-                            fg="#888", font=("Segoe UI", 10))
-            prog.pack()
+                            fg="#888", font=("Segoe UI", 13))
+            prog.pack(pady=(0, 20))
 
             def on_key(event):
                 if event.keysym == "space":
