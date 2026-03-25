@@ -174,64 +174,66 @@ class SolverApp:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("Jazz Cerego Solver")
-        self.root.geometry("480x440")
-        self.root.resizable(False, False)
+        self.root.geometry("720x600")
+        self.root.resizable(True, True)
         self.root.attributes("-topmost", True)   # float above Chrome
 
         self._course_text: str = ""   # extracted PDF text
 
         # ── API key ────────────────────────────────────────────────────────
-        key_frame = tk.Frame(root, padx=10, pady=8)
+        key_frame = tk.Frame(root, padx=16, pady=12)
         key_frame.pack(fill=tk.X)
-        tk.Label(key_frame, text="API Key:", width=8, anchor="w").pack(side=tk.LEFT)
+        tk.Label(key_frame, text="API Key:", width=9, anchor="w", font=("Segoe UI", 12)).pack(side=tk.LEFT)
         self.api_var = tk.StringVar(value=os.environ.get("ANTHROPIC_API_KEY", ""))
-        tk.Entry(key_frame, textvariable=self.api_var, show="*").pack(
+        tk.Entry(key_frame, textvariable=self.api_var, show="*", font=("Segoe UI", 12)).pack(
             side=tk.LEFT, fill=tk.X, expand=True
         )
 
         # ── PDF loader ─────────────────────────────────────────────────────
-        pdf_frame = tk.Frame(root, padx=10, pady=2)
+        pdf_frame = tk.Frame(root, padx=16, pady=6)
         pdf_frame.pack(fill=tk.X)
         _pdf_hint = "No slides PDF loaded  (optional — improves accuracy)" if _PDF_AVAILABLE else "Install pdfplumber to enable PDF slides"
         self.pdf_label = tk.Label(
             pdf_frame, text=_pdf_hint, anchor="w",
-            fg="#888", font=("Segoe UI", 9)
+            fg="#888", font=("Segoe UI", 11)
         )
         self.pdf_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
         self.pdf_btn = tk.Button(
             pdf_frame,
             text="Load Slides PDF",
-            font=("Segoe UI", 9, "bold"), relief=tk.FLAT,
-            bg="#2980b9", fg="white",
+            font=("Segoe UI", 11, "bold"), relief=tk.FLAT,
+            bg="#2980b9", fg="white", padx=10, pady=4,
             command=self._load_pdf,
             state=tk.NORMAL if _PDF_AVAILABLE else tk.DISABLED,
         )
         self.pdf_btn.pack(side=tk.RIGHT, padx=(6, 0))
 
         # ── Buttons ────────────────────────────────────────────────────────
-        btn_frame = tk.Frame(root, padx=10, pady=4)
+        btn_frame = tk.Frame(root, padx=16, pady=8)
         btn_frame.pack(fill=tk.X)
 
         self.start_btn = tk.Button(
             btn_frame,
             text="▶  Start",
-            width=14,
+            width=16,
             bg="#27ae60",
             fg="white",
-            font=("Segoe UI", 10, "bold"),
+            font=("Segoe UI", 13, "bold"),
             relief=tk.FLAT,
+            padx=10, pady=8,
             command=self.start,
         )
-        self.start_btn.pack(side=tk.LEFT, padx=(0, 8))
+        self.start_btn.pack(side=tk.LEFT, padx=(0, 12))
 
         self.stop_btn = tk.Button(
             btn_frame,
             text="■  Stop",
-            width=14,
+            width=16,
             bg="#e74c3c",
             fg="white",
-            font=("Segoe UI", 10, "bold"),
+            font=("Segoe UI", 13, "bold"),
             relief=tk.FLAT,
+            padx=10, pady=8,
             state=tk.DISABLED,
             command=self.stop,
         )
@@ -245,9 +247,9 @@ class SolverApp:
             root,
             textvariable=self.status_var,
             anchor="w",
-            fg="#666",
-            font=("Segoe UI", 9),
-        ).pack(fill=tk.X, padx=10, pady=(0, 2))
+            fg="#555",
+            font=("Segoe UI", 11),
+        ).pack(fill=tk.X, padx=16, pady=(0, 4))
 
         # ── Log ────────────────────────────────────────────────────────────
         self.log = scrolledtext.ScrolledText(
@@ -255,11 +257,11 @@ class SolverApp:
             height=15,
             state=tk.DISABLED,
             wrap=tk.WORD,
-            font=("Consolas", 9),
+            font=("Consolas", 11),
             bg="#1e1e1e",
             fg="#d4d4d4",
         )
-        self.log.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
+        self.log.pack(fill=tk.BOTH, expand=True, padx=16, pady=(0, 14))
 
         self._stop_event = threading.Event()
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
