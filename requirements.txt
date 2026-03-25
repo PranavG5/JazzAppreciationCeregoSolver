@@ -1,5 +1,6 @@
-anthropic>=0.40.0
 pyautogui>=0.9.54
 Pillow>=10.0.0
-keyboard>=0.13.5
 pdfplumber>=0.10.0
+pytesseract>=0.3.10
+mss>=9.0.1
+rapidfuzz>=3.6.0

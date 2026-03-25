@@ -1,180 +1,75 @@
 """
-Jazz Appreciation Cerego Solver – GUI Edition
-=============================================
-A floating control panel that stays on top of all windows.
+Jazz Appreciation Cerego Solver – Offline Edition
+==================================================
+No API key required.  Decisions are made locally using a knowledge base
+built from your own study materials (PDFs, flashcard text files, CSVs).
 
-Usage
------
-1. python solver.py
-2. Enter your Anthropic API key in the field (saved for the session)
-3. Navigate to your Cerego assignment in Chrome
-4. Click  ▶ Start
-5. Click  ■ Stop  or move mouse to the TOP-LEFT corner for emergency stop
+Setup (one time)
+----------------
+1. Install Tesseract 5:  https://github.com/UB-Mannheim/tesseract/wiki
+2. pip install -r requirements.txt
+3. python solver.py
+4. Click  "Load Materials"  and select your PDF / flashcard files
+5. Click  "Calibrate"  and follow the on-screen instructions
+6. Navigate to your Cerego assignment in Chrome
+7. Click  ▶ Start
 
-The window stays on top of Chrome so you can always reach the Stop button.
+Emergency stop
+--------------
+Move the mouse to the TOP-LEFT corner of the screen at any time.
 """
 
-import base64
-import io
 import json
 import os
 import time
 import threading
 import tkinter as tk
-from tkinter import scrolledtext, filedialog
+from tkinter import scrolledtext, filedialog, messagebox
 
-import anthropic
 import pyautogui
-from PIL import Image
 
-try:
-    import pdfplumber
-    _PDF_AVAILABLE = True
-except ImportError:
-    _PDF_AVAILABLE = False
+from knowledge   import KnowledgeBase
+from ocr_engine  import (
+    check_tesseract,
+    find_answer_choices,
+    detect_screen_state,
+    ScreenState,
+)
 
 # ── Configuration ─────────────────────────────────────────────────────────────
-CLICK_DELAY   = 1.2   # wait after clicking an answer  (seconds)
-ADVANCE_DELAY = 0.9   # wait after clicking Continue   (seconds)
-IDLE_DELAY    = 2.0   # wait when no question found    (seconds)
+
+CLICK_DELAY   = 1.2   # seconds to wait after clicking an answer
+ADVANCE_DELAY = 0.9   # seconds to wait after clicking Know It / Got It
+IDLE_DELAY    = 2.0   # seconds to wait when no question is detected
 MAX_IDLE      = 8     # consecutive idle cycles before pausing
 
-pyautogui.FAILSAFE = True   # move mouse to top-left corner → emergency stop
+CALIB_FILE    = os.path.join(os.path.dirname(__file__), "calibration.json")
+
+# Sensible defaults for a 1920×1080 screen at 100 % DPI.
+# Used only when calibration.json is absent.
+DEFAULT_CALIB = {
+    "know_it_xy":      [960, 900],
+    "got_it_xy":       [960, 900],
+    "question_region": {"x": 480, "y": 180, "w": 960, "h": 200},
+    "choices_region":  {"x": 360, "y": 400, "w": 1200, "h": 380},
+}
+
+pyautogui.FAILSAFE = True
 pyautogui.PAUSE    = 0.25
 
-# ── Claude prompts ────────────────────────────────────────────────────────────
 
-ANSWER_PROMPT_BASE = """\
-You are an expert assistant solving Cerego flashcard assignments for a Jazz Appreciation course.
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
-{knowledge_section}
-
-You will receive a screenshot of the Cerego quiz interface.
-
-Cerego has two distinct screen types — you MUST identify which type this is:
-
-1. INFO CARD: The screen is simply presenting a fact to memorize (e.g. "Louis Armstrong - Trumpet").
-   There is NO question being asked. The only action button is "Got It" (usually bottom-right).
-   → Set page_type = "info_card" and set click_x/click_y to the center of the "Got It" button.
-
-2. QUESTION: The screen asks the user something (e.g. "Can you name an album by this artist?",
-   multiple-choice answers, fill-in-the-blank, matching, etc.).
-   The advance button is "Know It" (bottom-right), NOT "Got It".
-   → Set page_type = "question", identify the CORRECT ANSWER option and set click_x/click_y
-     to the center of that answer choice. Prefer course material; fall back to general jazz knowledge.
-
-Return ONLY a JSON object — no markdown fences, no explanation outside the JSON:
-{{
-  "page_type": "info_card" | "question" | "other" | null,
-  "assignment_complete": true | false,
-  "question_text": "<the question text or fact label, or null>",
-  "correct_answer": "<text of the correct answer to click, or the 'Got It' label for info cards, or null>",
-  "click_x": <integer pixel x-coordinate to click, or null>,
-  "click_y": <integer pixel y-coordinate to click, or null>,
-  "reasoning": "<one-sentence explanation>"
-}}
-
-Rules:
-- Coordinates are measured from the top-left of the FULL screenshot.
-- click_x/click_y must be the CENTER of the button or answer choice to click.
-- If the assignment is complete (score screen, "Well done!"), set assignment_complete=true.
-- If a loading screen or non-quiz content is shown, set page_type="other" and click_x=null.
-- For matching questions return ONE click per response (the next unmatched item).
-"""
-
-def build_answer_prompt(course_text: str) -> str:
-    if course_text:
-        knowledge_section = (
-            "=== COURSE SLIDES (use these as your primary reference) ===\n"
-            + course_text[:12000]   # stay well within token limits
-            + "\n=== END COURSE SLIDES ==="
-        )
-    else:
-        knowledge_section = (
-            "No course slides loaded — using general jazz knowledge."
-        )
-    return ANSWER_PROMPT_BASE.format(knowledge_section=knowledge_section)
-
-NEXT_PROMPT = """\
-You are helping a solver advance through Cerego flashcard screens after an answer has been clicked.
-
-Look at the screenshot and find the button that moves to the next card. It is usually near the
-bottom-center of the screen and may be labeled: "Continue", "Next", "Got it", "Keep studying",
-"I knew it", "I didn't know it", or shown as a right-arrow ▶.
-
-Return ONLY a JSON object — no markdown, no extra text:
-{
-  "button_found": true | false,
-  "button_label": "<label text or null>",
-  "click_x": <integer x or null>,
-  "click_y": <integer y or null>
-}
-"""
-
-# ── Screenshot helper ─────────────────────────────────────────────────────────
-
-def screenshot_b64() -> tuple:
-    """Full-screen screenshot → (base64 PNG string, scale_x, scale_y).
-
-    On Windows with DPI scaling the captured image is at physical resolution
-    but pyautogui.moveTo/click use logical coordinates.  We return the scale
-    factors so callers can convert Claude's pixel coordinates back to logical.
-    """
-    img: Image.Image = pyautogui.screenshot()
-    logical_w, logical_h = pyautogui.size()
-    phys_w, phys_h = img.size
-    scale_x = logical_w / phys_w
-    scale_y = logical_h / phys_h
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    return base64.standard_b64encode(buf.getvalue()).decode(), scale_x, scale_y
+def load_calibration() -> dict:
+    if os.path.isfile(CALIB_FILE):
+        with open(CALIB_FILE) as f:
+            return json.load(f)
+    return dict(DEFAULT_CALIB)
 
 
-# ── Claude call helper ────────────────────────────────────────────────────────
-
-def call_claude(client: anthropic.Anthropic, system: str, img_b64: str) -> dict:
-    """Send screenshot to Claude with the given system prompt; return parsed dict."""
-    response = client.messages.create(
-        model="claude-opus-4-6",
-        max_tokens=512,
-        system=system,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": "image/png",
-                            "data": img_b64,
-                        },
-                    },
-                    {
-                        "type": "text",
-                        "text": "Analyze this screenshot and return the JSON response.",
-                    },
-                ],
-            }
-        ],
-    )
-
-    raw = ""
-    for block in response.content:
-        if block.type == "text":
-            raw = block.text.strip()
-            break
-
-    # Strip accidental markdown fences
-    if raw.startswith("```"):
-        raw = raw.split("\n", 1)[-1]
-        if "```" in raw:
-            raw = raw[: raw.rfind("```")]
-
-    try:
-        return json.loads(raw.strip())
-    except json.JSONDecodeError:
-        return {}
+def save_calibration(data: dict):
+    with open(CALIB_FILE, "w") as f:
+        json.dump(data, f, indent=2)
 
 
 # ── GUI ───────────────────────────────────────────────────────────────────────
@@ -182,50 +77,86 @@ def call_claude(client: anthropic.Anthropic, system: str, img_b64: str) -> dict:
 class SolverApp:
     def __init__(self, root: tk.Tk):
         self.root = root
-        self.root.title("Jazz Cerego Solver")
-        self.root.geometry("720x600")
+        self.root.title("Jazz Cerego Solver  (Offline)")
+        self.root.geometry("720x620")
         self.root.resizable(True, True)
-        self.root.attributes("-topmost", True)   # float above Chrome
+        self.root.attributes("-topmost", True)
 
-        self._course_text: str = ""   # extracted PDF text
+        self._kb    = KnowledgeBase()
+        self._calib = load_calibration()
+        self._stop_event = threading.Event()
 
-        # ── API key ────────────────────────────────────────────────────────
-        key_frame = tk.Frame(root, padx=16, pady=12)
-        key_frame.pack(fill=tk.X)
-        tk.Label(key_frame, text="API Key:", width=9, anchor="w", font=("Segoe UI", 12)).pack(side=tk.LEFT)
-        self.api_var = tk.StringVar(value=os.environ.get("ANTHROPIC_API_KEY", ""))
-        tk.Entry(key_frame, textvariable=self.api_var, show="*", font=("Segoe UI", 12)).pack(
-            side=tk.LEFT, fill=tk.X, expand=True
+        self._build_gui()
+
+        # Check Tesseract on startup (non-blocking)
+        self.root.after(300, self._check_tesseract_async)
+
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+        self.root.lift()
+        self.root.focus_force()
+
+    # ── GUI construction ───────────────────────────────────────────────────
+
+    def _build_gui(self):
+        # ── Materials row ──────────────────────────────────────────────────
+        mat_frame = tk.Frame(self.root, padx=16, pady=10)
+        mat_frame.pack(fill=tk.X)
+
+        self.mat_label = tk.Label(
+            mat_frame,
+            text="No study materials loaded",
+            anchor="w",
+            fg="#888",
+            font=("Segoe UI", 11),
+            wraplength=420,
+            justify="left",
         )
+        self.mat_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        # ── PDF loader ─────────────────────────────────────────────────────
-        pdf_frame = tk.Frame(root, padx=16, pady=6)
-        pdf_frame.pack(fill=tk.X)
-        _pdf_hint = "No slides loaded (optional)" if _PDF_AVAILABLE else "Install pdfplumber to enable PDF slides"
-        self.pdf_label = tk.Label(
-            pdf_frame, text=_pdf_hint, anchor="w",
-            fg="#888", font=("Segoe UI", 11), wraplength=400, justify="left"
-        )
-        self.pdf_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
-        self.pdf_btn = tk.Button(
-            pdf_frame,
-            text="Load PDF",
-            font=("Segoe UI", 11, "bold"), relief=tk.FLAT,
-            bg="#2980b9", fg="white", padx=12, pady=4,
-            command=self._load_pdf,
-        )
-        self.pdf_btn.pack(side=tk.RIGHT, padx=(6, 0))
+        tk.Button(
+            mat_frame,
+            text="Load Materials",
+            font=("Segoe UI", 11, "bold"),
+            relief=tk.FLAT,
+            bg="#2980b9", fg="white",
+            padx=12, pady=4,
+            command=self._load_materials,
+        ).pack(side=tk.RIGHT, padx=(6, 0))
 
-        # ── Buttons ────────────────────────────────────────────────────────
-        btn_frame = tk.Frame(root, padx=16, pady=8)
+        # ── Calibration row ────────────────────────────────────────────────
+        cal_frame = tk.Frame(self.root, padx=16, pady=4)
+        cal_frame.pack(fill=tk.X)
+
+        calib_status = "Calibration loaded" if os.path.isfile(CALIB_FILE) else "Not calibrated (using defaults)"
+        calib_color  = "#27ae60" if os.path.isfile(CALIB_FILE) else "#e67e22"
+        self.cal_label = tk.Label(
+            cal_frame,
+            text=calib_status,
+            anchor="w",
+            fg=calib_color,
+            font=("Segoe UI", 11),
+        )
+        self.cal_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        tk.Button(
+            cal_frame,
+            text="Calibrate",
+            font=("Segoe UI", 11, "bold"),
+            relief=tk.FLAT,
+            bg="#8e44ad", fg="white",
+            padx=12, pady=4,
+            command=self._calibrate,
+        ).pack(side=tk.RIGHT, padx=(6, 0))
+
+        # ── Start / Stop buttons ───────────────────────────────────────────
+        btn_frame = tk.Frame(self.root, padx=16, pady=8)
         btn_frame.pack(fill=tk.X)
 
         self.start_btn = tk.Button(
             btn_frame,
             text="▶  Start",
             width=16,
-            bg="#27ae60",
-            fg="white",
+            bg="#27ae60", fg="white",
             font=("Segoe UI", 13, "bold"),
             relief=tk.FLAT,
             padx=10, pady=8,
@@ -237,8 +168,7 @@ class SolverApp:
             btn_frame,
             text="■  Stop",
             width=16,
-            bg="#e74c3c",
-            fg="white",
+            bg="#e74c3c", fg="white",
             font=("Segoe UI", 13, "bold"),
             relief=tk.FLAT,
             padx=10, pady=8,
@@ -252,31 +182,23 @@ class SolverApp:
             value="Ready  •  Move mouse to top-left corner to emergency-stop"
         )
         tk.Label(
-            root,
+            self.root,
             textvariable=self.status_var,
             anchor="w",
             fg="#555",
             font=("Segoe UI", 11),
         ).pack(fill=tk.X, padx=16, pady=(0, 4))
 
-        # ── Log ────────────────────────────────────────────────────────────
+        # ── Activity log ───────────────────────────────────────────────────
         self.log = scrolledtext.ScrolledText(
-            root,
+            self.root,
             height=15,
             state=tk.DISABLED,
             wrap=tk.WORD,
             font=("Consolas", 11),
-            bg="#1e1e1e",
-            fg="#d4d4d4",
+            bg="#1e1e1e", fg="#d4d4d4",
         )
         self.log.pack(fill=tk.BOTH, expand=True, padx=16, pady=(0, 14))
-
-        self._stop_event = threading.Event()
-        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
-
-        # Force window to front
-        self.root.lift()
-        self.root.focus_force()
 
     # ── Internal helpers ───────────────────────────────────────────────────
 
@@ -297,56 +219,6 @@ class SolverApp:
             self.stop_btn.config(state=tk.NORMAL if running else tk.DISABLED)
         self.root.after(0, _do)
 
-    # ── Start / Stop ───────────────────────────────────────────────────────
-
-    def start(self):
-        api_key = self.api_var.get().strip()
-        if not api_key:
-            self._log("⚠  Please enter your Anthropic API key first.")
-            return
-        self._stop_event.clear()
-        self._set_buttons(running=True)
-        self._set_status("Running…")
-        threading.Thread(target=self._run, args=(api_key,), daemon=True).start()
-
-    def stop(self):
-        self._stop_event.set()
-        self._log("— Stop requested —")
-
-    def _on_close(self):
-        self._stop_event.set()
-        self.root.destroy()
-
-    def _load_pdf(self):
-        if not _PDF_AVAILABLE:
-            self._log("⚠  pdfplumber not installed.")
-            self._log("   Run:  python -m pip install pdfplumber")
-            self._log("   Then restart the solver.\n")
-            self.pdf_label.config(text="Run: python -m pip install pdfplumber", fg="#e74c3c")
-            return
-        path = filedialog.askopenfilename(
-            title="Select course slides PDF",
-            filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")],
-        )
-        if not path:
-            return
-        try:
-            pages = []
-            with pdfplumber.open(path) as pdf:
-                for page in pdf.pages:
-                    text = page.extract_text()
-                    if text:
-                        pages.append(text)
-            self._course_text = "\n\n".join(pages)
-            short = os.path.basename(path)
-            self.pdf_label.config(
-                text=f"Slides loaded: {short}  ({len(pages)} pages)", fg="#27ae60"
-            )
-            self._log(f"Loaded PDF: {short} — {len(pages)} pages of course content.\n")
-        except Exception as exc:
-            self.pdf_label.config(text=f"Error loading PDF: {exc}", fg="#e74c3c")
-            self._log(f"PDF load error: {exc}")
-
     def _click_on_chrome(self, x: int, y: int):
         """Temporarily drop topmost so Chrome receives the click."""
         self.root.attributes("-topmost", False)
@@ -357,88 +229,277 @@ class SolverApp:
         time.sleep(0.1)
         self.root.attributes("-topmost", True)
 
+    def _check_tesseract_async(self):
+        try:
+            check_tesseract()
+            self._log("Tesseract OCR: ready\n")
+        except RuntimeError as e:
+            self._log(f"WARNING — Tesseract not found:\n{e}\n")
+            self._set_status("Tesseract missing — see log")
+
+    # ── Start / Stop ───────────────────────────────────────────────────────
+
+    def start(self):
+        if self._kb.size() == 0:
+            if not messagebox.askyesno(
+                "No Materials",
+                "No study materials loaded.\n\n"
+                "The solver will still run but will guess answers.\n\n"
+                "Continue anyway?",
+            ):
+                return
+        self._stop_event.clear()
+        self._set_buttons(running=True)
+        self._set_status("Running…")
+        threading.Thread(target=self._run, daemon=True).start()
+
+    def stop(self):
+        self._stop_event.set()
+        self._log("— Stop requested —")
+
+    def _on_close(self):
+        self._stop_event.set()
+        self.root.destroy()
+
+    # ── Material loading ───────────────────────────────────────────────────
+
+    def _load_materials(self):
+        paths = filedialog.askopenfilenames(
+            title="Select study materials",
+            filetypes=[
+                ("Supported files", "*.pdf *.txt *.csv *.tsv"),
+                ("PDF",  "*.pdf"),
+                ("Text", "*.txt *.tsv"),
+                ("CSV",  "*.csv"),
+                ("All",  "*.*"),
+            ],
+        )
+        if not paths:
+            return
+
+        total = 0
+        for path in paths:
+            try:
+                n = self._kb.add_file(path)
+                self._log(f"Loaded {os.path.basename(path)} — {n} facts")
+                total += n
+            except Exception as exc:
+                self._log(f"Error loading {os.path.basename(path)}: {exc}")
+
+        sources = self._kb.file_sources()
+        summary = f"{self._kb.size()} facts from {len(sources)} file(s)"
+        self.mat_label.config(text=summary, fg="#27ae60")
+        self._log(f"\nKnowledge base ready: {summary}\n")
+        self._set_status(summary)
+
+    # ── Calibration ────────────────────────────────────────────────────────
+
+    def _calibrate(self):
+        """
+        Walk the user through recording button positions and screen regions.
+        Runs in the GUI thread (blocks with after() scheduling so the window
+        stays responsive) by using a simple state machine driven by spacebar.
+        """
+        # Disable start during calibration
+        self.start_btn.config(state=tk.DISABLED)
+        self._log("\n=== Calibration mode ===")
+        self._log("Follow the instructions below, then press SPACE each time.\n")
+
+        calib: dict = {}
+        steps = [
+            ("know_it_xy",
+             "1/5  Hover over the  KNOW IT / GOT IT  button, then press SPACE."),
+            ("question_tl",
+             "2/5  Hover over the TOP-LEFT corner of the QUESTION text area, press SPACE."),
+            ("question_br",
+             "3/5  Hover over the BOTTOM-RIGHT corner of the QUESTION text area, press SPACE."),
+            ("choices_tl",
+             "4/5  Hover over the TOP-LEFT corner of the ANSWER CHOICES area, press SPACE."),
+            ("choices_br",
+             "5/5  Hover over the BOTTOM-RIGHT corner of the ANSWER CHOICES area, press SPACE."),
+        ]
+
+        step_idx = [0]   # mutable container so nested func can modify it
+
+        def wait_for_space():
+            key = [None]
+            win = tk.Toplevel(self.root)
+            win.title("Calibration")
+            win.geometry("480x130")
+            win.attributes("-topmost", True)
+            win.resizable(False, False)
+
+            lbl = tk.Label(
+                win,
+                text=steps[step_idx[0]][1],
+                wraplength=440,
+                font=("Segoe UI", 12),
+                justify="center",
+            )
+            lbl.pack(expand=True, pady=20)
+
+            prog = tk.Label(win, text="Press SPACE to record, or ESC to cancel.",
+                            fg="#888", font=("Segoe UI", 10))
+            prog.pack()
+
+            def on_key(event):
+                if event.keysym == "space":
+                    key[0] = "space"
+                    win.destroy()
+                elif event.keysym == "Escape":
+                    key[0] = "esc"
+                    win.destroy()
+
+            win.bind("<KeyPress>", on_key)
+            win.focus_force()
+            win.wait_window()
+            return key[0]
+
+        def do_step():
+            if step_idx[0] >= len(steps):
+                _finish()
+                return
+
+            k, prompt = steps[step_idx[0]]
+            self._log(f"  {prompt}")
+
+            result = wait_for_space()
+            if result == "esc":
+                self._log("Calibration cancelled.\n")
+                self.start_btn.config(state=tk.NORMAL)
+                return
+
+            x, y = pyautogui.position()
+            calib[k] = [x, y]
+            self._log(f"    Recorded ({x}, {y})")
+            step_idx[0] += 1
+            self.root.after(100, do_step)
+
+        def _finish():
+            # Build the final calibration dict
+            kx, ky = calib["know_it_xy"]
+            q_tl = calib["question_tl"]
+            q_br = calib["question_br"]
+            c_tl = calib["choices_tl"]
+            c_br = calib["choices_br"]
+
+            result = {
+                "know_it_xy": [kx, ky],
+                "got_it_xy":  [kx, ky],   # same button
+                "question_region": {
+                    "x": q_tl[0], "y": q_tl[1],
+                    "w": max(1, q_br[0] - q_tl[0]),
+                    "h": max(1, q_br[1] - q_tl[1]),
+                },
+                "choices_region": {
+                    "x": c_tl[0], "y": c_tl[1],
+                    "w": max(1, c_br[0] - c_tl[0]),
+                    "h": max(1, c_br[1] - c_tl[1]),
+                },
+            }
+            save_calibration(result)
+            self._calib = result
+            self.cal_label.config(text="Calibration saved", fg="#27ae60")
+            self._log("\nCalibration saved to calibration.json\n")
+            self.start_btn.config(state=tk.NORMAL)
+
+        self.root.after(100, do_step)
+
     # ── Solver loop ────────────────────────────────────────────────────────
 
-    def _run(self, api_key: str):
-        client = anthropic.Anthropic(api_key=api_key)
-        idle_count = 0
-
+    def _run(self):
         self._log("Solver started.  Switch to your Cerego tab.\n")
+
+        # Check Tesseract is available before starting
+        try:
+            check_tesseract()
+        except RuntimeError as e:
+            self._log(f"Cannot start: {e}")
+            self._set_buttons(running=False)
+            self._set_status("Tesseract missing")
+            return
+
+        calib      = self._calib
+        q_region   = calib["question_region"]
+        c_region   = calib["choices_region"]
+        know_it_xy = tuple(calib["know_it_xy"])
+        got_it_xy  = tuple(calib["got_it_xy"])
+        regions    = {"question": q_region, "choices": c_region}
+
+        idle_count = 0
 
         while not self._stop_event.is_set():
             try:
-                answer_prompt = build_answer_prompt(self._course_text)
+                state = detect_screen_state(regions)
 
-                # ── Phase 1: Find the question and click the correct answer ──
-                img, sx, sy = screenshot_b64()
-                action = call_claude(client, answer_prompt, img)
-
-                if action.get("assignment_complete"):
-                    self._log("✅  Assignment complete!")
+                if state == ScreenState.COMPLETE:
+                    self._log("Assignment complete!")
                     self._set_status("Done — assignment complete")
                     break
 
-                page_type = action.get("page_type")
-                if page_type in ("info_card", "question") and action.get("click_x") is not None:
+                elif state == ScreenState.INFO_CARD:
                     idle_count = 0
-                    q_text = action.get("question_text", "")
-                    answer = action.get("correct_answer", "")
-                    reason = action.get("reasoning", "")
-                    # Scale from physical screenshot pixels → logical screen coords
-                    cx = int(action["click_x"] * sx)
-                    cy = int(action["click_y"] * sy)
+                    self._log("[Info card] — clicking Got It")
+                    self._click_on_chrome(*got_it_xy)
+                    time.sleep(ADVANCE_DELAY)
 
-                    if page_type == "info_card":
-                        self._log(f"[Info card] {q_text}")
-                        self._log(f"  → clicking Got It at ({cx}, {cy})\n")
-                        self._click_on_chrome(cx, cy)
-                        time.sleep(ADVANCE_DELAY)
-                        # Info cards advance themselves — no NEXT_PROMPT needed
+                elif state == ScreenState.QUESTION:
+                    idle_count = 0
 
-                    else:  # question
-                        self._log(f"Q: {q_text}")
-                        self._log(f"→ {answer}  [{reason}]")
-                        self._log(f"  clicking ({cx}, {cy})")
-                        self._click_on_chrome(cx, cy)
-                        time.sleep(CLICK_DELAY)
+                    # Read question text
+                    from ocr_engine import ocr_region
+                    question_text = ocr_region(q_region, psm=6)
 
-                        # ── Phase 2: Find and click Know It / Continue ──────
-                        img2, sx2, sy2 = screenshot_b64()
-                        nxt  = call_claude(client, NEXT_PROMPT, img2)
+                    # Find answer choices with their screen positions
+                    choices = find_answer_choices(c_region)
 
-                        if nxt.get("button_found") and nxt.get("click_x") is not None:
-                            nx = int(nxt["click_x"] * sx2)
-                            ny = int(nxt["click_y"] * sy2)
-                            label  = nxt.get("button_label") or "Next"
-                            self._log(f'  → "{label}" button at ({nx}, {ny})\n')
-                            self._click_on_chrome(nx, ny)
-                            time.sleep(ADVANCE_DELAY)
-                        else:
-                            self._log("  (no Continue button found — waiting)\n")
-                            time.sleep(IDLE_DELAY)
+                    if not choices:
+                        self._log("  (question detected but no choices found — waiting)")
+                        time.sleep(IDLE_DELAY)
+                        continue
 
-                else:
+                    choice_texts = [c.text for c in choices]
+                    best_text, confidence = self._kb.query(question_text, choice_texts)
+
+                    # Find the AnswerChoice object that matches best_text
+                    from rapidfuzz import fuzz, process as rfp
+                    match = rfp.extractOne(
+                        best_text, choice_texts, scorer=fuzz.token_set_ratio
+                    )
+                    if match:
+                        idx = choice_texts.index(match[0])
+                        chosen = choices[idx]
+                    else:
+                        chosen = choices[0]   # last-resort: first choice
+
+                    conf_pct = f"{confidence:.0f}%"
+                    warn     = "  [LOW CONFIDENCE — GUESS]" if confidence < 50 else ""
+                    self._log(f"Q: {question_text[:80]}")
+                    self._log(f"→ {chosen.text}  [confidence: {conf_pct}]{warn}")
+
+                    self._click_on_chrome(chosen.cx, chosen.cy)
+                    time.sleep(CLICK_DELAY)
+                    self._click_on_chrome(*know_it_xy)
+                    time.sleep(ADVANCE_DELAY)
+
+                else:  # LOADING / OTHER
                     idle_count += 1
-                    self._log(f"No question detected (idle #{idle_count})")
+                    self._log(f"Waiting for question… (idle #{idle_count})")
                     if idle_count >= MAX_IDLE:
                         self._log(
-                            "\n⚠  Paused — no question found after "
-                            f"{MAX_IDLE} attempts.\n"
-                            "   Manually advance the page, then click ▶ Start again.\n"
+                            f"\nPaused — no question found after {MAX_IDLE} attempts.\n"
+                            "Manually advance the page, then click ▶ Start again.\n"
                         )
                         self._set_status("Paused — waiting for user")
                         break
                     time.sleep(IDLE_DELAY)
 
             except pyautogui.FailSafeException:
-                self._log("⛔  Emergency stop (mouse moved to top-left corner).")
+                self._log("Emergency stop (mouse moved to top-left corner).")
                 self._set_status("Emergency stopped")
                 break
-            except anthropic.APIError as exc:
-                self._log(f"API error: {exc}\n  Retrying in 5 s…")
-                time.sleep(5)
             except Exception as exc:
-                self._log(f"Unexpected error: {exc}\n  Retrying in 3 s…")
+                self._log(f"Error: {exc}\n  Retrying in 3 s…")
                 time.sleep(3)
 
         self._set_buttons(running=False)
