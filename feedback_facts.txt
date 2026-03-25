@@ -1,4 +1,4 @@
-Learned facts  (149 unique pairs)
+Learned facts  (167 unique pairs)
 ============================================================
 
 le  |  1 th serene oe _ f je ce s ee eh a et yy of a a if a _ i a
@@ -21,11 +21,10 @@ ce le  |  _ _ rd lve 5 a _ 4 4 7 o i an we eee _ 3 id a ties
 ee ee  |  _ qintows plat aa pd py yo a bs _ or wi re ih ss neer c8 ge re 2d a 8 rae ay 1 a eee re y f yi i rn fy y pe cu so ce ne he va ws j ra 4 ae vii of _ e r aa iz
 SS vv  hh a  |  a i baad i 4 lag 1 hh x fia f wow srs e _ iy i ue 7 4 a a we ete ms e _ ne en 4 wile tees oee l 1 2 isge eh coe vot 5 eas f a an rahaiee n at toa on feo so wt woos i t ve e wy ee a ae f a y i _ awe ee
 i 000OOGVOVGOGORMRdMedOerm_meoecesrveesesrernemscrecmmrr_eeeerrve_eerveeeerrvrveceeoeororvv_ooov_eoorvvoooc_ovovnc_ovrvvovvwv__owovwvrrrovrrreoVooweree_Oemm i  |  a ye pl a beep 3 we ar p e re 4 ve y f 7 a a _ f a xs aaa a ed 1 y ai a 3 ue ieee bap tea ss i _ mf we ae ard in ie gr yy ete on eee gg cing poy ere ib i ki ng 4 7 a at at fan sg dele a aaa ax ie pee poy a ea _ wy fe io é 7 age tt meany sae 4 eb to oa 7 oa o a a onl htt ue aa ms roe ene rays eb ea a ry 2 q ee pee eee re te wty i ee a se mre ee be an we 4 an a see see 4 5 5 ee je a hte b e io q n i od _ 2 pee wn a lo l loo fd ees i fi a a oan oo wees 9 oi rs mo vtec tat si ok _ yo
-Ah Um
-Free Jazz
-None of the above  |  Ah Um
-Free Jazz
-None of the above
+Y Giant Steps  |  ah um birth of the cool none of the above
+ALove Supreme  |  ah um free jazz kind of blue
+ALove Supreme  |  ah um free jazz none of the above
+Y Giant Steps  |  ah um heavy metal bebop none of the above
 Ah Um
 Portrait in Jazz
 None of the above  |  Ah Um
@@ -69,6 +68,9 @@ None of the above
 Drums
 None of the above
 ¢ Jazz Cerego Solver (Offline) — oO x
+WY Piano/Keyboard  |  baritone saxophone flute none of the above
+WY Piano/Keyboard  |  bass baritone saxophone flute
+WY Piano/Keyboard  |  bass composer trombone none of the above
 Bass/Composer
 ~Y Piano/Composer
 Trombone
@@ -106,11 +108,8 @@ w Bass/Vocal  |  bass vocal trumpet tenor saxophone none of the above
 YW acoustic roots  |  bebop principles electric instruments none of the above
 Y Collective improvisation  |  big band instrumentation return to acoustic roots passive rhythm section
 WwW Chick Corea  |  bill evans sonny rollins none of the above
-Birth of the Cool
-Ah Um
-None of the above  |  Birth of the Cool
-Ah Um
-None of the above
+ALove Supreme  |  birth of the cool ah um none of the above
+ALove Supreme  |  birth of the cool free jazz ah um
 Birth of the Cool
 Free Jazz
 None of the above  |  Birth of the Cool
@@ -121,11 +120,9 @@ Heavy Metal Bebop
 Ah Um  |  Birth of the Cool
 Heavy Metal Bebop
 Ah Um
-Birth of the Cool
-Kind of Blue
-None of the above  |  Birth of the Cool
-Kind of Blue
-None of the above
+Y Giant Steps  |  birth of the cool heavy metal bebop none of the above
+ALove Supreme  |  birth of the cool kind of blue none of the above
+Y Giant Steps  |  birth of the cool portrait in jazz none of the above
 Charles Mingus
 S
 Bass/Composer  |  Charles Mingus
@@ -175,11 +172,7 @@ Tenor Saxophone
 None of the above  |  Drums
 Tenor Saxophone
 None of the above
-Drums
-Trombone
-Bass/Composer  |  Drums
-Trombone
-Bass/Composer
+WY Piano/Keyboard  |  drums trombone bass composer
 Drums
 Trombone
 None of the above  |  Drums
@@ -240,11 +233,7 @@ Ah Um
 Birth of the Cool  |  Free Jazz
 Ah Um
 Birth of the Cool
-Free Jazz
-Ah Um
-None of the above  |  Free Jazz
-Ah Um
-None of the above
+ALove Supreme  |  free jazz ah um none of the above
 Free Jazz
 Birth of the Cool
 Kind of Blue  |  Free Jazz
@@ -258,6 +247,8 @@ None of the above
 Y Alto Saxophone  |  guitar piano none of the above ne ee ne
 Y Alto Saxophone  |  guitar tenor saxophone none of the above
 ee ee  |  head an fh bg ng ve e l noe p 4 j ty y on a p yw fone r a a oe v f to ee ol at ey baie e leet ss cp ara x ts t 1 ot on 73 3 a e rs eal 2 os oe e me fe we wee es é ae ed a ot pei os a
+Y Giant Steps  |  heavy metal bebop birth of the cool none of the above
+Y Giant Steps  |  heavy metal bebop portrait in jazz ah um
 Heavy Metal Bebop
 Portrait in Jazz
 None of the above  |  Heavy Metal Bebop
@@ -315,11 +306,8 @@ Ah Um
 None of the above  |  Kind of Blue
 Ah Um
 None of the above
-Kind of Blue
-Birth of the Cool
-None of the above  |  Kind of Blue
-Birth of the Cool
-None of the above
+ALove Supreme  |  kind of blue birth of the cool none of the above
+ALove Supreme  |  kind of blue free jazz birth of the cool
 Kind of Blue
 Free Jazz
 None of the above  |  Kind of Blue
@@ -381,6 +369,10 @@ Y Return to acoustic roots with emphasis on early jazz styles  |  rhythmic rock 
 Y One chord for a long period of time  |  rhythmic rock grooves electric instruments none of the above
 Y motivic development  |  rock influence chaos dropping bombs
 eee fn  ee ee  |  rs page i pa he i fee fe pa ats rd a a ém e ae l ay nn a n ie oe _ a
+__     ve Arove supreme  |  running lerego saved plano keyboard kind or blue cerego memory no button q running ah um no button q running lerego wkung correct y gllant steps a none of the above cerego memory kind of blue w alove supreme birth of the cool xx none of the above
+Y Giant Steps  |  running lerego wkung correct wmnecorded 4521 1304 can you name an ae saved no button q running ah um ur kunning 3 5 recorded 4521 1304 can you name an album by this metal heavy bebop cerego memory birth of the cool x heavy metal bebop portrait in jazz wy giant steps
+WY Piano/Keyboard  |  running lerego wkung correct y glant steps im saved no button q running alto saxophone saved name you an um no button qv running ur 35 kunning none of the above cerego memory drums trumpet wy piano keyboard x none of the above
+Wmnecorded (4521, 1304) Can you name an aE  |  running recorded 4521 1304 can you name an album by this artist calibration saved to calibration json solver started switch to your cerego tab john coltrane
 Running...
 TK 1002) Blue | > [KB luu%] Miles Davis Y Bass/Composer
 [No-button] Q: Running...
@@ -403,6 +395,7 @@ None of the above
 am  ee  |  ry ns p ll a az ab e ers 4 am a si one ce awe es a af 4 i ag a og oo sy nes ki av 1 ae a nue e ey se om ve we es a ee 7 1 a os 3 an o i a n n
 ee eee ago _  |  s ew v4 y ny mo 4 zt c lss is oo a le wee co i j arpa ss e _ t in ts 7 vee ww weed 4 bea
 Y motivic development  |  sheets of sound chaos dropping bombs
+WY Joe Zawinul  |  sonny rollins joe williams wayne shorter
 Tenor Saxophone
 Drums
 None of the above  |  Tenor Saxophone
@@ -446,6 +439,7 @@ Ah Um
 G saz Cerego Solv.. 9 — L) xn
 1839 facts from 2 flle(s None of the above
 Calibration saved
+WY Piano/Keyboard  |  y piano keyboard x drums jazz cerego solver offline l x ff jazz cerego solver offline alto saxophone 1839 facts from 2 file s calibration saved tenor saxophone running no button qy pllano keyboard none of the above drums g saz cerego solver offline l xn
 YZ Michael Brecker
 Louis Armstrong
 Count Basie
