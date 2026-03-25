@@ -453,12 +453,43 @@ class SolverApp:
             try:
                 label = read_button_label(know_it_xy)
 
-                # ══ NO BUTTON — choose-choice / image question page ═══════════
-                # Button gone means Cerego is waiting for us to pick a choice.
+                # ══ NO BUTTON — choose-choice page ═══════════════════════════
+                # Scan for visible choice boxes and pick the best one;
+                # fall back to a center click only if OCR finds nothing.
                 if label == "unknown":
-                    sw, sh = pyautogui.size()
-                    self._log("No button — choose-choice page, clicking center")
-                    self._click_on_chrome(sw // 2, sh // 2)
+                    question_text = ocr_region(q_region, psm=6).strip()
+                    choices       = find_answer_choices(c_region)
+
+                    if choices:
+                        choice_texts    = [c.text for c in choices]
+                        feedback_answer = self._feedback.query(question_text)
+                        chosen          = None
+
+                        if feedback_answer:
+                            m = rfp.extractOne(
+                                feedback_answer, choice_texts,
+                                scorer=fuzz.token_set_ratio,
+                            )
+                            if m and m[1] >= 60:
+                                chosen = choices[choice_texts.index(m[0])]
+                                source = "[Cerego memory]"
+
+                        if not chosen:
+                            best_text, conf = self._kb.query(question_text, choice_texts)
+                            m      = rfp.extractOne(best_text, choice_texts,
+                                                    scorer=fuzz.token_set_ratio)
+                            chosen = choices[choice_texts.index(m[0])] if m else choices[0]
+                            warn   = "  [GUESS]" if conf < 50 else ""
+                            source = f"[KB {conf:.0f}%]{warn}"
+
+                        self._log(f"[No-button] Q: {question_text[:80]}")
+                        self._log(f"→ {chosen.text}  {source}")
+                        self._click_on_chrome(chosen.cx, chosen.cy)
+                    else:
+                        sw, sh = pyautogui.size()
+                        self._log(f"[No-button] No choices found — clicking center")
+                        self._click_on_chrome(sw // 2, sh // 2)
+
                     time.sleep(CLICK_DELAY)
                     continue   # re-check label immediately
 
