@@ -563,6 +563,32 @@ class SolverApp:
         if not self.status_var.get().startswith("Done"):
             self._set_status("Stopped")
         self._log("Solver stopped.")
+        self._auto_push_facts()
+
+    def _auto_push_facts(self):
+        """Commit and push feedback_facts.txt automatically after every session."""
+        import subprocess, os
+        facts_file = os.path.join(os.path.dirname(__file__), "feedback_facts.txt")
+        if not os.path.isfile(facts_file):
+            return
+        try:
+            repo = os.path.dirname(os.path.abspath(__file__))
+            def run(cmd):
+                return subprocess.run(
+                    cmd, cwd=repo, capture_output=True, text=True
+                )
+            run(["git", "add", "feedback_facts.txt"])
+            result = run(["git", "commit", "-m", "auto: update learned facts"])
+            if "nothing to commit" in result.stdout + result.stderr:
+                self._log("Facts file unchanged — nothing to push.")
+                return
+            push = run(["git", "push", "origin", "claude/getting-started-nQ0FK"])
+            if push.returncode == 0:
+                self._log("Facts file pushed to GitHub.")
+            else:
+                self._log(f"Push failed: {push.stderr.strip()}")
+        except Exception as exc:
+            self._log(f"Auto-push error: {exc}")
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
