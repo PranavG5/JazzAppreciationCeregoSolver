@@ -1,4 +1,4 @@
-Learned facts  (102 unique pairs)
+Learned facts  (112 unique pairs)
 ============================================================
 
 le  |  1 th serene oe _ f je ce s ee eh a et yy of a a if a _ i a
@@ -27,10 +27,27 @@ ee am  |  ame pa _ ae er 4 8 e pe 3 1 a vd 7 ff cme a aoe 9 a 4 is vi fa hy mu e
 ee ee am  |  art bay ve ps os or te 1 rr ao a ey jan ie a lf 4 d n a a _ trs a a ne ww aa
 ._el oe swaovswxvwowmesS sssSsS9S9aasSsmsSsSsSsSsSSsS3S3S3S3S3S393938383898900g  |  ay aos playe 5 mv 4 i oe f e ear aoe f so 4 ait 5 q nee ol moe ee 28 r f vv w
 le  |  ay z i ay ta 7 i sf me a ee a ae wf _ ad i js s wt me a i nee ee o ae ay 4 _ ss v gg c ey f vw f a are _ tee we q fr www b if f oy k yaw ak or ed y og eof lee 7 l a is oe 4 i _ oo 7 wr ths fae ed a ae _ _ aid coat 4b oman aes 4 oo im ws ce oe ea i fis y hf ae f h j wate a ta a av _ ia a r d me s les we oo sy aes st _ ty _ war a ee wv 7 ted o ly is 7 os my 3 gi
+Baritone Saxophone
+Drums
+None of the above
+¢ Jazz Cerego Solver (Offline) — oO x  |  Baritone Saxophone
+Drums
+None of the above
+¢ Jazz Cerego Solver (Offline) — oO x
+Bass
+Drums
+None of the above  |  Bass
+Drums
+None of the above
 w Bass/Vocal  |  bass vocal trumpet tenor saxophone none of the above
 YW acoustic roots  |  bebop principles electric instruments none of the above
 Y Collective improvisation  |  big band instrumentation return to acoustic roots passive rhythm section
 WwW Chick Corea  |  bill evans sonny rollins none of the above
+Charles Mingus
+S
+Bass/Composer  |  Charles Mingus
+JS
+Bass/Composer
 Ww Mahavishnu Orchestra  |  charlie parker quintet count basie orchestra none of the above
 Y Rhythmic rock grooves  |  clarinet banjo tuba collective improvisation in all instruments none of the above
 Y One chord for a long period of time  |  clarinet banjo tuba electric instruments missing musical elements such as tempo harmony or form
@@ -40,6 +57,13 @@ WY Collective improvisation in all instruments  |  clarinet banjo tuba rhythmic 
 ee eee ago _  |  cm 8 va ky ae 4c qe i os ow ft q x an a iy lo rn es me to wo ors inline te jt 7 oy ae a be 4 a
 Y Return to acoustic roots with emphasis on early jazz styles  |  collective improvisation in all instruments electric instruments none of the above
 Y One chord for a long period of time  |  collective improvisation in the front line clarinet banjo tuba missing musical elements such as tempo harmony or form
+Count Basie
+Stan Getz
+None of the above
+G jazz Cerego Solver (O¥fline) — O x  |  Count Basie
+Stan Getz
+None of the above
+G jazz Cerego Solver (O¥fline) — O x
 d,
 Weather Report | ‘. ”
 AAt
@@ -53,6 +77,11 @@ Whi? © -
 Ar | |i “
 WY Weather Report  |  dizzy gillespie big band charlie parker with strings none of the above
 Y motivic development  |  dropping bombs chaos none of the above
+Drums
+Piano/Composer
+None of the above  |  Drums
+Piano/Composer
+None of the above
 WY Weather Report  |  duke ellington orchestra dizzy gillespie big band charlie parker with strings
 SS vv  hh a  |  ee a jere sool ff deigsicelk jazz cerego solver offline oo x os oe a oo moe ae
 YW acoustic roots  |  electric instruments bebop principles none of the above
@@ -136,8 +165,30 @@ Mahavishnu Orchestra : pe? bene
 ; 3 +
 SS vv  hh a  |  in i me van a ss e le y aie age a coe stefan a wae vl ae gr oa evs 7 4 tw ce at tn a i lo oe ae a co ee rae ot eae ee ey ee oo oe _ b oy le eee we o en f_ a 4 en tlt a 4s a re nd ney a tf pay _eep fe
 a ee  |  is oes ta ov on se a ws ia 4 fac sr vi pee te y ae x are as f ret lesh or x rd a cee pe ps yy n a
+John Coltrane
+VS
+Tenor Saxophone
+G saz Cerego Solver (Offline) — L) xn  |  John Coltrane
+Sl
+Tenor Saxophone
+G saz Cerego Solver (Offline) — L) xn
+Kind of Blue
+Ah Um
+None of the above  |  Kind of Blue
+Ah Um
+None of the above
 Y trumpet, clarinet and trombone  |  lead vocals and rap artist trumpet and tenor sax none of the above
+Lester Young
+Stan Getz
+None of the above  |  Lester Young
+Stan Getz
+None of the above
 Y Wynton Marsalis  |  louis armstrong chet baker none of the above
+Louis Armstrong
+Stan Getz
+Count Basie  |  Louis Armstrong
+Stan Getz
+Count Basie
 ee Li  |  mintor ah a gs 5a a 7 on a is aa awe x o i a p a i p al 4 i an a bebop pjevaa détesic ct _ et
 Y Return to acoustic roots with emphasis on early jazz styles  |  missing musical elements such as tempo harmony or form collective improvisation in all instruments none of the above
 Y Return to acoustic roots with emphasis on early jazz styles  |  missing musical elements such as tempo harmony or form electric instruments collective improvisation in all instruments
@@ -185,6 +236,11 @@ Y motivic development  |  sheets of sound chaos dropping bombs
 Y Alto Saxophone  |  tenor saxophone piano none of the above ne ee ne
 w Bass/Vocal  |  tenor saxophone trumpet piano composer none of the above
 Ww banjo, tuba  |  trumpet clarinet accordion violin none of the above
+Trumpet
+Tenor Saxophone
+None of the above  |  Trumpet
+Tenor Saxophone
+None of the above
 ._el oe swaovswxvwowmesS sssSsS9S9aasSsmsSsSsSsSsSSsS3S3S3S3S3S393938383898900g  |  uw 1 x i i ry aaa aa co oe vb ep sa t pee ee le ay bi 4 v af ed o 2 a te
 am  ee  |  we a wt is a fs a aa ee 4 y d cap ro fol aiteal reha 2 lies pos cassieal kr ent eats
 am  eee ee i  |  wey hams era med te a 1 _ eae g dp as em _ 4 rs ly st rp _ i _ 7 ce sf i 1 ig b fer ae _ 7 s k ae he eg s aa ee 4 oe set 2 3 ps s code a e le ae
