@@ -186,6 +186,49 @@ def _norm(text: str) -> str:
 
 # ── Feedback store ────────────────────────────────────────────────────────────
 
+# Strings that indicate the solver's own UI was accidentally OCR'd instead of
+# quiz content.  Any Q or A containing one of these is silently discarded.
+_UI_NOISE = frozenset([
+    "jazz cerego solver", "calibration saved", "facts from",
+    "solver started", "solver stopped", "load materials",
+    "anthropic api key", "no button", "running...",
+    "switch to your cerego", "cerego memory",
+    "click start", "click amstart",
+])
+
+
+def _is_quality(text: str) -> bool:
+    """
+    Return True only if *text* looks like real natural language.
+    Rejects OCR noise (random chars, single-letter tokens, UI fragments).
+    """
+    text = text.strip()
+    if not text or len(text) < 3 or len(text) > 250:
+        return False
+    if "\n" in text:          # multi-line = OCR read several rows at once
+        return False
+    tl = text.lower()
+    if any(n in tl for n in _UI_NOISE):
+        return False
+    tokens = text.split()
+    if not tokens:
+        return False
+    # At least 45 % of tokens must be ≥ 3 characters long
+    if sum(1 for t in tokens if len(t) >= 3) / len(tokens) < 0.45:
+        return False
+    # Average token length ≥ 2.5  (blocks "a b c d e" style noise)
+    if sum(len(t) for t in tokens) / len(tokens) < 2.5:
+        return False
+    # At least 45 % of tokens must be ≥ 55 % alphabetic
+    alpha_ok = sum(
+        1 for t in tokens
+        if len(t) >= 2 and sum(c.isalpha() for c in t) / len(t) >= 0.55
+    )
+    if alpha_ok / len(tokens) < 0.45:
+        return False
+    return True
+
+
 class FeedbackStore:
     """
     Remembers Cerego's right/wrong verdicts and maps questions to their
@@ -211,13 +254,15 @@ class FeedbackStore:
                 data = json.load(f)
             for k, v in data.items():
                 if isinstance(v, dict):
-                    # New format
-                    self._store[k] = v.get("answer", "")
-                    self._orig[k]  = v.get("original", k)
+                    answer   = v.get("answer", "")
+                    original = v.get("original", k)
                 else:
-                    # Legacy format (plain string)
-                    self._store[k] = v
-                    self._orig[k]  = k
+                    answer   = v
+                    original = k
+                # Discard garbage that snuck in during previous sessions
+                if _is_quality(k) and _is_quality(answer):
+                    self._store[k] = answer
+                    self._orig[k]  = original
         except Exception:
             self._store = {}
             self._orig  = {}
@@ -250,6 +295,9 @@ class FeedbackStore:
     def record(self, question: str, correct_answer: str):
         """Save the confirmed correct answer for this question and persist."""
         if not question.strip() or not correct_answer.strip():
+            return
+        # Reject OCR noise — only store real words/sentences
+        if not _is_quality(question) or not _is_quality(correct_answer):
             return
         norm_q = _norm(question)
         self._store[norm_q] = correct_answer.strip()
