@@ -348,7 +348,9 @@ def detect_answer_feedback(regions: dict) -> tuple[str, str]:
     red_band   = _rows_to_band(row_red,   gap=18)
 
     # ── Step 3: determine verdict ──────────────────────────────────────────────
-    if green_band and red_band:
+    # ANY red detected means the answer was wrong.
+    # Green (if present) shows what the correct answer is.
+    if red_band:
         verdict = "incorrect"
     elif green_band:
         verdict = "correct"

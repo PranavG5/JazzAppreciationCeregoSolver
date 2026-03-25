@@ -192,50 +192,71 @@ class FeedbackStore:
     confirmed correct answers.  Persisted to feedback.json so knowledge
     survives between sessions.  Always queried before the static knowledge
     base — Cerego's ground truth takes highest priority.
+
+    Storage format (feedback.json):
+        { "<norm_question>": {"answer": "<correct_answer>", "original": "<question_text>"} }
     """
 
     def __init__(self, path: str):
         self._path  = path
         self._store: dict[str, str] = {}   # norm_question → correct_answer
+        self._orig:  dict[str, str] = {}   # norm_question → original question text
         self._load()
 
     def _load(self):
-        if os.path.isfile(self._path):
-            try:
-                with open(self._path, encoding="utf-8") as f:
-                    self._store = json.load(f)
-            except Exception:
-                self._store = {}
+        if not os.path.isfile(self._path):
+            return
+        try:
+            with open(self._path, encoding="utf-8") as f:
+                data = json.load(f)
+            for k, v in data.items():
+                if isinstance(v, dict):
+                    # New format
+                    self._store[k] = v.get("answer", "")
+                    self._orig[k]  = v.get("original", k)
+                else:
+                    # Legacy format (plain string)
+                    self._store[k] = v
+                    self._orig[k]  = k
+        except Exception:
+            self._store = {}
+            self._orig  = {}
 
     def _save(self):
+        data = {
+            k: {"answer": self._store[k], "original": self._orig.get(k, k)}
+            for k in self._store
+        }
         with open(self._path, "w", encoding="utf-8") as f:
-            json.dump(self._store, f, indent=2, ensure_ascii=False)
+            json.dump(data, f, indent=2, ensure_ascii=False)
         self._write_facts_file()
 
     def _write_facts_file(self):
-        """Write a human-readable learned_facts.txt alongside feedback.json."""
+        """Write clean Q→A pairs to feedback_facts.txt."""
         txt_path = os.path.splitext(self._path)[0] + "_facts.txt"
-        # Deduplicate: only keep entries where question != answer (skip reverses)
-        # and collect unique (question, answer) pairs sorted alphabetically.
-        seen: set[frozenset] = set()
-        lines: list[str] = []
-        for q, a in sorted(self._store.items(), key=lambda x: x[0]):
-            pair = frozenset([q, _norm(a)])
-            if pair in seen:
+        pairs: list[tuple[str, str]] = []   # (display_question, answer)
+        for norm_q, answer in self._store.items():
+            if not answer.strip():
                 continue
-            seen.add(pair)
-            lines.append(f"{a}  |  {self._store.get(_norm(a), q)}")
+            display_q = self._orig.get(norm_q, norm_q)
+            pairs.append((display_q, answer))
+        pairs.sort(key=lambda p: p[0].lower())
         with open(txt_path, "w", encoding="utf-8") as f:
-            f.write(f"Learned facts  ({len(lines)} unique pairs)\n")
-            f.write("=" * 60 + "\n\n")
-            for line in lines:
-                f.write(line + "\n")
+            f.write(f"# Learned Q→A pairs  ({len(pairs)} facts)\n")
+            f.write("# Format: Q: <question> → A: <answer>\n\n")
+            for q, a in pairs:
+                f.write(f"Q: {q}\nA: {a}\n\n")
 
     def record(self, question: str, correct_answer: str):
         """Save the confirmed correct answer for this question and persist."""
         if not question.strip() or not correct_answer.strip():
             return
-        self._store[_norm(question)] = correct_answer.strip()
+        norm_q = _norm(question)
+        self._store[norm_q] = correct_answer.strip()
+        # Prefer the longest/most-original question text seen for this key
+        existing = self._orig.get(norm_q, "")
+        if len(question.strip()) > len(existing):
+            self._orig[norm_q] = question.strip()
         self._save()
 
     def query(self, question: str) -> str | None:
@@ -249,11 +270,11 @@ class FeedbackStore:
         # Exact normalised match first (fast path)
         if key in self._store:
             return self._store[key]
-        # Fuzzy match — require high similarity (≥ 88) to avoid false hits
+        # Fuzzy match — threshold 80 to handle OCR noise across sessions
         if _RAPIDFUZZ_OK:
             keys  = list(self._store.keys())
             match = rfprocess.extractOne(key, keys, scorer=fuzz.token_set_ratio)
-            if match and match[1] >= 88:
+            if match and match[1] >= 80:
                 return self._store[match[0]]
         return None
 
