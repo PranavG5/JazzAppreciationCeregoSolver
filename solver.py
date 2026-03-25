@@ -113,12 +113,21 @@ Return ONLY a JSON object — no markdown, no extra text:
 
 # ── Screenshot helper ─────────────────────────────────────────────────────────
 
-def screenshot_b64() -> str:
-    """Full-screen screenshot → base64-encoded PNG string."""
+def screenshot_b64() -> tuple:
+    """Full-screen screenshot → (base64 PNG string, scale_x, scale_y).
+
+    On Windows with DPI scaling the captured image is at physical resolution
+    but pyautogui.moveTo/click use logical coordinates.  We return the scale
+    factors so callers can convert Claude's pixel coordinates back to logical.
+    """
     img: Image.Image = pyautogui.screenshot()
+    logical_w, logical_h = pyautogui.size()
+    phys_w, phys_h = img.size
+    scale_x = logical_w / phys_w
+    scale_y = logical_h / phys_h
     buf = io.BytesIO()
     img.save(buf, format="PNG")
-    return base64.standard_b64encode(buf.getvalue()).decode()
+    return base64.standard_b64encode(buf.getvalue()).decode(), scale_x, scale_y
 
 
 # ── Claude call helper ────────────────────────────────────────────────────────
@@ -361,7 +370,7 @@ class SolverApp:
                 answer_prompt = build_answer_prompt(self._course_text)
 
                 # ── Phase 1: Find the question and click the correct answer ──
-                img = screenshot_b64()
+                img, sx, sy = screenshot_b64()
                 action = call_claude(client, answer_prompt, img)
 
                 if action.get("assignment_complete"):
@@ -375,7 +384,9 @@ class SolverApp:
                     q_text = action.get("question_text", "")
                     answer = action.get("correct_answer", "")
                     reason = action.get("reasoning", "")
-                    cx, cy = int(action["click_x"]), int(action["click_y"])
+                    # Scale from physical screenshot pixels → logical screen coords
+                    cx = int(action["click_x"] * sx)
+                    cy = int(action["click_y"] * sy)
 
                     if page_type == "info_card":
                         self._log(f"[Info card] {q_text}")
@@ -392,11 +403,12 @@ class SolverApp:
                         time.sleep(CLICK_DELAY)
 
                         # ── Phase 2: Find and click Know It / Continue ──────
-                        img2 = screenshot_b64()
+                        img2, sx2, sy2 = screenshot_b64()
                         nxt  = call_claude(client, NEXT_PROMPT, img2)
 
                         if nxt.get("button_found") and nxt.get("click_x") is not None:
-                            nx, ny = int(nxt["click_x"]), int(nxt["click_y"])
+                            nx = int(nxt["click_x"] * sx2)
+                            ny = int(nxt["click_y"] * sy2)
                             label  = nxt.get("button_label") or "Next"
                             self._log(f'  → "{label}" button at ({nx}, {ny})\n')
                             self._click_on_chrome(nx, ny)
