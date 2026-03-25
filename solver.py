@@ -542,7 +542,10 @@ class SolverApp:
 
                     else:
                         # ── No choice boxes (image/visual question) ────────────
-                        self._log(f"Q: {question_text[:80]}  [visual — clicking Know It]")
+                        # Click center of screen as a best-effort guess
+                        sw, sh = pyautogui.size()
+                        self._log(f"Q: {question_text[:80]}  [visual — clicking center]")
+                        self._click_on_chrome(sw // 2, sh // 2)
 
                     # Click Know It — cursor returns to and stays on button
                     self._click_on_chrome(*know_it_xy)
