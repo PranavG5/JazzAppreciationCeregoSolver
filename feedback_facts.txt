@@ -1,4 +1,4 @@
-Learned facts  (125 unique pairs)
+Learned facts  (149 unique pairs)
 ============================================================
 
 le  |  1 th serene oe _ f je ce s ee eh a et yy of a a if a _ i a
@@ -21,17 +21,42 @@ ce le  |  _ _ rd lve 5 a _ 4 4 7 o i an we eee _ 3 id a ties
 ee ee  |  _ qintows plat aa pd py yo a bs _ or wi re ih ss neer c8 ge re 2d a 8 rae ay 1 a eee re y f yi i rn fy y pe cu so ce ne he va ws j ra 4 ae vii of _ e r aa iz
 SS vv  hh a  |  a i baad i 4 lag 1 hh x fia f wow srs e _ iy i ue 7 4 a a we ete ms e _ ne en 4 wile tees oee l 1 2 isge eh coe vot 5 eas f a an rahaiee n at toa on feo so wt woos i t ve e wy ee a ae f a y i _ awe ee
 i 000OOGVOVGOGORMRdMedOerm_meoecesrveesesrernemscrecmmrr_eeeerrve_eerveeeerrvrveceeoeororvv_ooov_eoorvvoooc_ovovnc_ovrvvovvwv__owovwvrrrovrrreoVooweree_Oemm i  |  a ye pl a beep 3 we ar p e re 4 ve y f 7 a a _ f a xs aaa a ed 1 y ai a 3 ue ieee bap tea ss i _ mf we ae ard in ie gr yy ete on eee gg cing poy ere ib i ki ng 4 7 a at at fan sg dele a aaa ax ie pee poy a ea _ wy fe io é 7 age tt meany sae 4 eb to oa 7 oa o a a onl htt ue aa ms roe ene rays eb ea a ry 2 q ee pee eee re te wty i ee a se mre ee be an we 4 an a see see 4 5 5 ee je a hte b e io q n i od _ 2 pee wn a lo l loo fd ees i fi a a oan oo wees 9 oi rs mo vtec tat si ok _ yo
+Ah Um
+Free Jazz
+None of the above  |  Ah Um
+Free Jazz
+None of the above
+Ah Um
+Portrait in Jazz
+None of the above  |  Ah Um
+Portrait in Jazz
+None of the above
 Y Clarinet, banjo, tuba  |  alto sax trumpet piano electric keyboard electric guitar piano bass drums
 Y Clarinet, banjo, tuba  |  alto sax trumpet piano piano bass drums none of the above
+Alto Saxophone
+Bass/Composer
+Trombone  |  Alto Saxophone
+Bass/Composer
+Trombone
 Alto Saxophone
 Drums
 None of the above  |  Alto Saxophone
 Drums
 None of the above
 Alto Saxophone
+Tenor Saxophone
+None of the above  |  Alto Saxophone
+Tenor Saxophone
+None of the above
+Alto Saxophone
 Trombone
 None of the above  |  Alto Saxophone
 Trombone
+None of the above
+Alto Saxophone
+Trumpet
+None of the above  |  Alto Saxophone
+Trumpet
 None of the above
 ee am  |  ame pa _ ae er 4 8 e pe 3 1 a vd 7 ff cme a aoe 9 a 4 is vi fa hy mu en y z 2 ats as a ocha op eyes oes ole eoe eee n
 ee ee am  |  art bay ve ps os or te 1 rr ao a ey jan ie a lf 4 d n a a _ trs a a ne ww aa
@@ -62,6 +87,21 @@ Drums
 None of the above  |  Bass
 Drums
 None of the above
+Bass
+Flute
+None of the above  |  Bass
+Flute
+None of the above
+Bass
+Tenor Saxophone
+None of the above  |  Bass
+Tenor Saxophone
+None of the above
+Bass
+Trumpet
+Drums  |  Bass
+Trumpet
+Drums
 w Bass/Vocal  |  bass vocal trumpet tenor saxophone none of the above
 YW acoustic roots  |  bebop principles electric instruments none of the above
 Y Collective improvisation  |  big band instrumentation return to acoustic roots passive rhythm section
@@ -81,6 +121,11 @@ Heavy Metal Bebop
 Ah Um  |  Birth of the Cool
 Heavy Metal Bebop
 Ah Um
+Birth of the Cool
+Kind of Blue
+None of the above  |  Birth of the Cool
+Kind of Blue
+None of the above
 Charles Mingus
 S
 Bass/Composer  |  Charles Mingus
@@ -116,9 +161,29 @@ Ar | |i “
 WY Weather Report  |  dizzy gillespie big band charlie parker with strings none of the above
 Y motivic development  |  dropping bombs chaos none of the above
 Drums
+Alto Saxophone
+None of the above  |  Drums
+Alto Saxophone
+None of the above
+Drums
 Piano/Composer
 None of the above  |  Drums
 Piano/Composer
+None of the above
+Drums
+Tenor Saxophone
+None of the above  |  Drums
+Tenor Saxophone
+None of the above
+Drums
+Trombone
+Bass/Composer  |  Drums
+Trombone
+Bass/Composer
+Drums
+Trombone
+None of the above  |  Drums
+Trombone
 None of the above
 WY Weather Report  |  duke ellington orchestra dizzy gillespie big band charlie parker with strings
 SS vv  hh a  |  ee a jere sool ff deigsicelk jazz cerego solver offline oo x os oe a oo moe ae
@@ -171,6 +236,21 @@ AS
 Kind of Blue
 Ls 020 0007WYreeeooewrrr eewwm_ Sn i, ee ee  |  f oe ft an ww lo fr e 4 n a th y aon mm e e zt lage f s aa a fod _ eee re rn ay e a ee 2 a ad oe ae lt am ta _ l ope os rpiccaed 4 i we r rd ye en _ ot r f pe neen a ee eet k ars qe nn as
 Free Jazz
+Ah Um
+Birth of the Cool  |  Free Jazz
+Ah Um
+Birth of the Cool
+Free Jazz
+Ah Um
+None of the above  |  Free Jazz
+Ah Um
+None of the above
+Free Jazz
+Birth of the Cool
+Kind of Blue  |  Free Jazz
+Birth of the Cool
+Kind of Blue
+Free Jazz
 Birth of the Cool
 None of the above  |  Free Jazz
 Birth of the Cool
@@ -178,6 +258,11 @@ None of the above
 Y Alto Saxophone  |  guitar piano none of the above ne ee ne
 Y Alto Saxophone  |  guitar tenor saxophone none of the above
 ee ee  |  head an fh bg ng ve e l noe p 4 j ty y on a p yw fone r a a oe v f to ee ol at ey baie e leet ss cp ara x ts t 1 ot on 73 3 a e rs eal 2 os oe e me fe we wee es é ae ed a ot pei os a
+Heavy Metal Bebop
+Portrait in Jazz
+None of the above  |  Heavy Metal Bebop
+Portrait in Jazz
+None of the above
 le  |  i r r eee pn my vv ss ze ae a a 4 oe 4 n
 wv ?
 ; z
@@ -208,6 +293,11 @@ Mahavishnu Orchestra : pe? bene
 ; 3 +
 SS vv  hh a  |  in i me van a ss e le y aie age a coe stefan a wae vl ae gr oa evs 7 4 tw ce at tn a i lo oe ae a co ee rae ot eae ee ey ee oo oe _ b oy le eee we o en f_ a 4 en tlt a 4s a re nd ney a tf pay _eep fe
 a ee  |  is oes ta ov on se a ws ia 4 fac sr vi pee te y ae x are as f ret lesh or x rd a cee pe ps yy n a
+Jelly Roll Morton
+A
+Piano  |  Jelly Roll Morton
+A
+Piano
 John Coltrane, Michael Brecker, and Chris Potter
 SAS
 Tenor Saxophone  |  John Coltrane, Michael Brecker, and Chris Potter
@@ -224,6 +314,16 @@ Kind of Blue
 Ah Um
 None of the above  |  Kind of Blue
 Ah Um
+None of the above
+Kind of Blue
+Birth of the Cool
+None of the above  |  Kind of Blue
+Birth of the Cool
+None of the above
+Kind of Blue
+Free Jazz
+None of the above  |  Kind of Blue
+Free Jazz
 None of the above
 Y trumpet, clarinet and trombone  |  lead vocals and rap artist trumpet and tenor sax none of the above
 Lester Young
@@ -265,6 +365,11 @@ Y Guitar/Composer  |  piano composer guitar composer piano keyboard none of the 
 Y Guitar/Composer  |  piano composer guitar composer trumpet none of the above
 Y Alto Saxophone  |  piano guitar none of the above
 ooOoao SS ee 0O a0OO  oO0aEeyeowa   (aao oOo0aoaoaoavr'/ eee  |  po oad oe v 7 ape p ll a sd tones td tong 6 indi _ fy t 5 ares 5 _ 2 oe ge a a4 z ee 4 nee ol made ce ef m a a db fee us sa ie 53 ee vas s bots a aa i j ys a ae s ra 4 7 a i i ws toa ge ees i ff va 0 ws yu yy os bg dos or y a i pe e i _ lt e es fe tat ay aon oe i eee aw terrell 7 a fo eee 7 t 7
+Portrait in Jazz
+Birth of the Cool
+None of the above  |  Portrait in Jazz
+Birth of the Cool
+None of the above
 le  |  py f ae ly ar lseine 7 fogygte sn ae r ae é 4 aa 4
 YW acoustic roots  |  r b genres bebop principles none of the above
 YW acoustic roots  |  r b genres electric instruments none of the above
@@ -298,8 +403,23 @@ None of the above
 am  ee  |  ry ns p ll a az ab e ers 4 am a si one ce awe es a af 4 i ag a og oo sy nes ki av 1 ae a nue e ey se om ve we es a ee 7 1 a os 3 an o i a n n
 ee eee ago _  |  s ew v4 y ny mo 4 zt c lss is oo a le wee co i j arpa ss e _ t in ts 7 vee ww weed 4 bea
 Y motivic development  |  sheets of sound chaos dropping bombs
+Tenor Saxophone
+Drums
+None of the above  |  Tenor Saxophone
+Drums
+None of the above
 Y Alto Saxophone  |  tenor saxophone piano none of the above ne ee ne
 w Bass/Vocal  |  tenor saxophone trumpet piano composer none of the above
+Thelonious Monk
+S
+Piano/Composer  |  Thelonious Monk
+JS
+Piano/Composer
+Trombone
+Alto Saxophone
+Bass/Composer  |  Trombone
+Alto Saxophone
+Bass/Composer
 Ww banjo, tuba  |  trumpet clarinet accordion violin none of the above
 Trumpet
 Tenor Saxophone
