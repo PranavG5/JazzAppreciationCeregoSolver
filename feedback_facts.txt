@@ -1,6 +1,7 @@
-Learned facts  (167 unique pairs)
+Learned facts  (218 unique pairs)
 ============================================================
 
+eee ggg  |  1 4 na ce o poet a x4 7 ss fees loan a pot lf a all ee ee ue o 7 ne a y cu a
 le  |  1 th serene oe _ f je ce s ee eh a et yy of a a if a _ i a
 Y 1960s  |  1920s 1970s none of the above
 Y 1960s  |  1920s 1980s 1940s
@@ -12,6 +13,7 @@ Y 1960s  |  1970s 1940s none of the above
 Y 1960s  |  1970s 1980s none of the above
 Y 1960s  |  1980s 1940s none of the above
 Y 1960s  |  1980s 1950s none of the above
+x od ae he ef ee mt he re ala, MA ay Je iat  |  20s 30s 40s y 2 __ _______ ________ fa a ly swing oe jazz ere
 _ SS hv hv vo hv hv JJ  |  30s 40s 50s 50s 60s 70s 50s 60s 70s swing 4 hard bop cool _ ttt ttt 2 22 4o 2 a cool fusion modal free 20s 30s 40s 50s 60s 70s 40s 50s 60s 22 4 cool 22 4 swing 22 cool bebop hard bop fusion
 le  |  5 v a i en ee y a re ay wi ead 4 a 4 an _ _ 8 o oo o ad a a bed we t f _ _ g _ 5 be a os ee e a oo ee _ le wre o tne 3 me t oe cee ae iw sa ars ye fe qs co as ons oy _ sas ft yan 4 a gan ee wr e a mre 4d _ rr beeb q j j og a _ a igh 1a bo a _ 4 y iar xx re rb ps r a afl nw hy orf pi pa ys ty and at le a _ atl i 4 a or i t a th aa in
 PT lS _-  _  n Wa 0909000  |  50s 60s 70s 30s 40s 50s 40s 50s 60s cool _ swing 7200 el j 5s 7 222 4 cool modal free nd cool 5 fusion jazz cerego solver offline o x 1839 facts from 2 file s 50s 60s 70s 20s 30s 40s calibration saved 72 1 4 swing _ running manually advance cerego tnen click amstart again fusion bebop 7 solver stopped msolver started switch to your cerego
@@ -21,6 +23,7 @@ ce le  |  _ _ rd lve 5 a _ 4 4 7 o i an we eee _ 3 id a ties
 ee ee  |  _ qintows plat aa pd py yo a bs _ or wi re ih ss neer c8 ge re 2d a 8 rae ay 1 a eee re y f yi i rn fy y pe cu so ce ne he va ws j ra 4 ae vii of _ e r aa iz
 SS vv  hh a  |  a i baad i 4 lag 1 hh x fia f wow srs e _ iy i ue 7 4 a a we ete ms e _ ne en 4 wile tees oee l 1 2 isge eh coe vot 5 eas f a an rahaiee n at toa on feo so wt woos i t ve e wy ee a ae f a y i _ awe ee
 i 000OOGVOVGOGORMRdMedOerm_meoecesrveesesrernemscrecmmrr_eeeerrve_eerveeeerrvrveceeoeororvv_ooov_eoorvvoooc_ovovnc_ovrvvovvwv__owovwvrrrovrrreoVooweree_Oemm i  |  a ye pl a beep 3 we ar p e re 4 ve y f 7 a a _ f a xs aaa a ed 1 y ai a 3 ue ieee bap tea ss i _ mf we ae ard in ie gr yy ete on eee gg cing poy ere ib i ki ng 4 7 a at at fan sg dele a aaa ax ie pee poy a ea _ wy fe io é 7 age tt meany sae 4 eb to oa 7 oa o a a onl htt ue aa ms roe ene rays eb ea a ry 2 q ee pee eee re te wty i ee a se mre ee be an we 4 an a see see 4 5 5 ee je a hte b e io q n i od _ 2 pee wn a lo l loo fd ees i fi a a oan oo wees 9 oi rs mo vtec tat si ok _ yo
+None of the above  |  a4 ere id 4 aia 8 fe re art view 2 wo a _ i 7 m ornette coleman m a es 1 7 eae th
 Y Giant Steps  |  ah um birth of the cool none of the above
 ALove Supreme  |  ah um free jazz kind of blue
 ALove Supreme  |  ah um free jazz none of the above
@@ -42,6 +45,7 @@ Drums
 None of the above  |  Alto Saxophone
 Drums
 None of the above
+Y Tenor Saxophone  |  alto saxophone flute none of the above
 Alto Saxophone
 Tenor Saxophone
 None of the above  |  Alto Saxophone
@@ -123,12 +127,18 @@ Ah Um
 Y Giant Steps  |  birth of the cool heavy metal bebop none of the above
 ALove Supreme  |  birth of the cool kind of blue none of the above
 Y Giant Steps  |  birth of the cool portrait in jazz none of the above
+SS eeesesererreeeervwevmescs_vvv_v_vovovwwvovvvowvowvvosc_rwwvvvvwv_owwvvvv_oovv'scvvaeme rer _vwoorrveemmm  |  bs minto n sd x pig 1 wins es ee z ns pa i 5 it pelt s cl a na a if y ea ac os ie nd a e és _ yr eel ee a a yy a0 vegi ae 5 i oat a a car ye ms 4 bas ng yr a ti aa if bi vs a ew re 7 ee k ee ae ye
+ee eee Eee eee  |  cere tag p wo 3e ayo ae i we i an ie 7 jf a a x en lt oom wty oe owe an ae woe s 4s i p 4 t fy wr a of iow 4 f et ny ive a nn an ae 4 a mett o i sn 5 ae a ce toes tee ra sutnee ald a 4 fee f 7 vies pe vge 2 y i ie ee te et 1 a 3 lf re io send eg ayers af on le i 4 posi ea a aie tn sty erat ans ed oe aay ag 2 a w red va ff ete ge a loe b ae i inet ial u ye ie ce teens wo yy 4 p a ta a es a ae ian é f le ad ar i bo 3 i ro ae i a as ek _ rd 7 4 oe iy
 Charles Mingus
 S
 Bass/Composer  |  Charles Mingus
 JS
 Bass/Composer
+Y Pat Metheny  |  charlie parker art blakey none of the above
+Y Pat Metheny  |  charlie parker art blakey wynton marsalis
 Ww Mahavishnu Orchestra  |  charlie parker quintet count basie orchestra none of the above
+Y Pat Metheny  |  charlie parker wynton marsalis dave brubeck
+Tenor Saxophone  |  chris potter s tenor saxophone
 Y Rhythmic rock grooves  |  clarinet banjo tuba collective improvisation in all instruments none of the above
 Y One chord for a long period of time  |  clarinet banjo tuba electric instruments missing musical elements such as tempo harmony or form
 Y Missing musical elements such as tempo, harmony, or form  |  clarinet banjo tuba electric instruments none of the above
@@ -137,6 +147,7 @@ WY Collective improvisation in all instruments  |  clarinet banjo tuba rhythmic 
 ee eee ago _  |  cm 8 va ky ae 4c qe i os ow ft q x an a iy lo rn es me to wo ors inline te jt 7 oy ae a be 4 a
 Y Return to acoustic roots with emphasis on early jazz styles  |  collective improvisation in all instruments electric instruments none of the above
 Y One chord for a long period of time  |  collective improvisation in the front line clarinet banjo tuba missing musical elements such as tempo harmony or form
+WY Electric instruments and electric effects  |  collective improvisation in the front line missing musical elements such as tempo harmony or form none of the above
 Count Basie
 Stan Getz
 None of the above
@@ -179,7 +190,11 @@ None of the above  |  Drums
 Trombone
 None of the above
 WY Weather Report  |  duke ellington orchestra dizzy gillespie big band charlie parker with strings
+ee aS HHW_ SS, TS Na HYNY  _ i  _____________4_4_4_4_4_4_4444.,_ ee  |  e z aa oe a a a a bp sema 9 sai xt ob _ eu ae a lad _ ee ote aay ee hy a _ cidod f lrdl e a a a sea da
 SS vv  hh a  |  ee a jere sool ff deigsicelk jazz cerego solver offline oo x os oe a oo moe ae
+ee  |  ee ite 4 me ses ws ss pa se 1 _ i ii oo pw _
+Y Tenor Saxophone  |  electric bass fretless alto saxophone none of the above
+Y Guitar/Composer  |  electric bass fretless piano keyboard none of the above
 YW acoustic roots  |  electric instruments bebop principles none of the above
 YW acoustic roots  |  electric instruments bebop principles r b genres
 Y Missing musical elements such as tempo, harmony, or form  |  electric instruments clarinet banjo tuba one chord for a long time
@@ -227,7 +242,10 @@ Miles Davis
 AS
 
 Kind of Blue
+Won for "Best New Artist" in 2011 Grammy  |  esperanza spalding a won grammy for best new artist in 2011
+Bass/Vocal  |  esperanza spalding s s bass vocal
 Ls 020 0007WYreeeooewrrr eewwm_ Sn i, ee ee  |  f oe ft an ww lo fr e 4 n a th y aon mm e e zt lage f s aa a fod _ eee re rn ay e a ee 2 a ad oe ae lt am ta _ l ope os rpiccaed 4 i we r rd ye en _ ot r f pe neen a ee eet k ars qe nn as
+TT fF fF fF 00, SSS ys  |  fa a f 4 _ _a 2 oo a j ai v2 ae fina be i wy a aio ee ns ig on _ a y y oy b ped f i o od qo
 Free Jazz
 Ah Um
 Birth of the Cool  |  Free Jazz
@@ -244,6 +262,7 @@ Birth of the Cool
 None of the above  |  Free Jazz
 Birth of the Cool
 None of the above
+Y Alto Saxophone  |  guitar piano none of the above
 Y Alto Saxophone  |  guitar piano none of the above ne ee ne
 Y Alto Saxophone  |  guitar tenor saxophone none of the above
 ee ee  |  head an fh bg ng ve e l noe p 4 j ty y on a p yw fone r a a oe v f to ee ol at ey baie e leet ss cp ara x ts t 1 ot on 73 3 a e rs eal 2 os oe e me fe we wee es é ae ed a ot pei os a
@@ -254,6 +273,8 @@ Portrait in Jazz
 None of the above  |  Heavy Metal Bebop
 Portrait in Jazz
 None of the above
+WY Ornette Coleman  |  herbie hancock miles davis duke ellington
+WY Ornette Coleman  |  herbie hancock miles davis none of the above
 le  |  i r r eee pn my vv ss ze ae a a 4 oe 4 n
 wv ?
 ; z
@@ -301,6 +322,7 @@ G saz Cerego Solver (Offline) — L) xn  |  John Coltrane
 Sl
 Tenor Saxophone
 G saz Cerego Solver (Offline) — L) xn
+Alto Saxophone  |  kenny garrett s alto saxophone
 Kind of Blue
 Ah Um
 None of the above  |  Kind of Blue
@@ -319,6 +341,7 @@ Stan Getz
 None of the above  |  Lester Young
 Stan Getz
 None of the above
+4 whe. ty o! wy IPE  |  louis armstrong a i vs
 Y Wynton Marsalis  |  louis armstrong chet baker none of the above
 Louis Armstrong
 Count Basie
@@ -335,6 +358,7 @@ Vv
 Trumpet  |  Louis Armstrong
 v
 Trumpet
+ee i S080 It ON.  |  meee ee 5 ee ge sk r fa ae rs 9 hie 5 a aa an 0 6g 2 hs 4 7 bf b co fin i er a sj omi
 Michael Brecker | _
 Man? © a
 ASLon
@@ -342,16 +366,25 @@ ASLon
 Man? © a
 AgSLoOn
 “Ou 4 U 2 U
+Tenor Saxophone  |  michael brecker g saz cerego solver offline l xn tenor saxophone 1862 facts from 2 file s load materials calibration saved anthropic api key used after 3 min ebesaaanoeia a mstop a
+Tenor Saxophone  |  michael sigevet cele g saz cerego solver offline l xn 1862 facts from 2 file s load materials or saxophone calibration saved anthropic api key used after 3 min ebesaaanoeia running claude api mode answers page tenor saxophone v
+WY Ornette Coleman  |  miles davis duke ellington none of the above
 ee Li  |  mintor ah a gs 5a a 7 on a is aa awe x o i a p a i p al 4 i an a bebop pjevaa détesic ct _ et
+ee EEE  |  mintor ee bas see re ec ne ne f of pag ae ke ii t fe re f ae 4 an
 Y Return to acoustic roots with emphasis on early jazz styles  |  missing musical elements such as tempo harmony or form collective improvisation in all instruments none of the above
 Y Return to acoustic roots with emphasis on early jazz styles  |  missing musical elements such as tempo harmony or form electric instruments collective improvisation in all instruments
+eee te _ _a_k EEE EEE  |  mo va y an a p roe y é ww ae f of n a og y met tt a 7 bead s i 4 te a wrt oy 7 i ee oe am oar an rites f t ra a wy ety yee ot ee me i i es 7 an we a reer ee 4 _ pan a 4 an we ba ae v 4 on a _7 oy a a wil aan wale a pe oem 3 ee es 1 saad edd 4 a ys a tn l we iit a pn mp tubb eb ff wil a
 ee i fn  |  ok ad idee tn yy 4 on oo 4 tn a re y oe ieee 8 i a tg 7 weet ae a eo 4a oy a wet ves _ aa 4 ae a le ee s mn as i yo we 4 fe ne ee 7 lc save vs rea ra eq eee ly
 Y Missing musical elements such as tempo, harmony, or form  |  one chord for a long time electric instruments clarinet banjo tuba
+Guitar/Composer  |  pat metheny js guitar composer
+Electric instruments and electric effects  |  pe 4 wu ze i 4 bad ees electric instruments and electric effects wr or a ne un ot wee oy
 Ww banjo, tuba  |  piano bass accordion violin none of the above
 Y Clarinet, banjo, tuba  |  piano bass drums trumpet trombone tenor sax none of the above
 Y Guitar/Composer  |  piano composer guitar composer piano keyboard none of the above
 Y Guitar/Composer  |  piano composer guitar composer trumpet none of the above
+w Bass/Vocal  |  piano composer tenor saxophone none of the above
 Y Alto Saxophone  |  piano guitar none of the above
+Y Guitar/Composer  |  piano keyboard piano composer none of the above
 ooOoao SS ee 0O a0OO  oO0aEeyeowa   (aao oOo0aoaoaoavr'/ eee  |  po oad oe v 7 ape p ll a sd tones td tong 6 indi _ fy t 5 ares 5 _ 2 oe ge a a4 z ee 4 nee ol made ce ef m a a db fee us sa ie 53 ee vas s bots a aa i j ys a ae s ra 4 7 a i i ws toa ge ees i ff va 0 ws yu yy os bg dos or y a i pe e i _ lt e es fe tat ay aon oe i eee aw terrell 7 a fo eee 7 t 7
 Portrait in Jazz
 Birth of the Cool
@@ -361,6 +394,7 @@ None of the above
 le  |  py f ae ly ar lseine 7 fogygte sn ae r ae é 4 aa 4
 YW acoustic roots  |  r b genres bebop principles none of the above
 YW acoustic roots  |  r b genres electric instruments none of the above
+> ON — ‘ il | ny A  |  r herbie hancock ss wi a ry o s i 1s 4 as
 ago _  eee  |  r wagrer e e or m i y a o a e _ jazz baa eso ma on é _ _ _ 2 2 i i
 WY Electric instruments and electric effects  |  return to acoustic roots with emphasis on early jazz styles collective improvisation in all instruments none of the above
 Y Return to acoustic roots with emphasis on early jazz styles  |  rhythmic rock grooves collective improvisation in all instruments none of the above
@@ -392,28 +426,40 @@ music .
 Drums
 xX Trumpet
 None of the above
+fee, ‘ I i g 8 “$ wy “~*~ OF ge | eS a —_ ve arn - x i a ne: = RS Ow st re - -m | sage big % “got ae ey @, yo ‘4 om a,  |  rx 3 a os t i i wr _ ae on ca a i 4 lf ee a esa z swe ee se a an wee we es cw a hte nie ee ne ee te oor ke dial spt eee or pe tk ee ee ss arena saree abt oe 2 a 7 ciao ic ortuaet apne alll i nee se f bea at e s om rts gee x of 4 va s 4 ee re rome me oe wee oe ey a _ 5 ad see a ers rr meee oe cale lis po one fe s e 9 i seat com 7 rte ads ae 1 nee ars een i aan aoe ie se ye 2 oe re oe es oa ad a h 4 0 i od pitieibene 2 oo i _
 am  ee  |  ry ns p ll a az ab e ers 4 am a si one ce awe es a af 4 i ag a og oo sy nes ki av 1 ae a nue e ey se om ve we es a ee 7 1 a os 3 an o i a n n
 ee eee ago _  |  s ew v4 y ny mo 4 zt c lss is oo a le wee co i j arpa ss e _ t in ts 7 vee ww weed 4 bea
+gen ee eee  |  s ma vc us wn ale ti be i 2 ie a on 4 an on ar a yi ae a we j cou i xy p _ y 4 fac ner me ae all bsp y i i in a eee m h 4 5 a a a 4 at i e bebop wins way ae
 Y motivic development  |  sheets of sound chaos dropping bombs
+WwW Chick Corea  |  sonny rollins bill evans duke ellington
+WwW Chick Corea  |  sonny rollins duke ellington none of the above
 WY Joe Zawinul  |  sonny rollins joe williams wayne shorter
+ee eee  |  ss a m aw eo oe t 7a al tae s oo my beh xt in ls ome ae na af a i we ees gl 7 oe a yy a i b ar fa ae rs uy hee hf él ae mm i of vg a i rt 7 a
 Tenor Saxophone
 Drums
 None of the above  |  Tenor Saxophone
 Drums
 None of the above
+w Bass/Vocal  |  tenor saxophone piano composer none of the above
+Y Alto Saxophone  |  tenor saxophone piano none of the above
 Y Alto Saxophone  |  tenor saxophone piano none of the above ne ee ne
 w Bass/Vocal  |  tenor saxophone trumpet piano composer none of the above
+WwW Chick Corea  |  thelonious monk duke ellington sonny rollins
 Thelonious Monk
 S
 Piano/Composer  |  Thelonious Monk
 JS
 Piano/Composer
+WY Ornette Coleman  |  thelonious monk miles davis none of the above
 Trombone
 Alto Saxophone
 Bass/Composer  |  Trombone
 Alto Saxophone
 Bass/Composer
 Ww banjo, tuba  |  trumpet clarinet accordion violin none of the above
+Y Guitar/Composer  |  trumpet electric bass fretless none of the above
+w Bass/Vocal  |  trumpet piano composer none of the above
+Y Alto Saxophone  |  trumpet piano none of the above
 Trumpet
 Tenor Saxophone
 None of the above  |  Trumpet
@@ -421,11 +467,16 @@ Tenor Saxophone
 None of the above
 ._el oe swaovswxvwowmesS sssSsS9S9aasSsmsSsSsSsSsSSsS3S3S3S3S3S393938383898900g  |  uw 1 x i i ry aaa aa co oe vb ep sa t pee ee le ay bi 4 v af ed o 2 a te
 am  ee  |  we a wt is a fs a aa ee 4 y d cap ro fol aiteal reha 2 lies pos cassieal kr ent eats
+Weather Report  |  weather report a ry o a ru slo s sf oi
 am  eee ee i  |  wey hams era med te a 1 _ eae g dp as em _ 4 rs ly st rp _ i _ 7 ce sf i 1 ig b fer ae _ 7 s k ae he eg s aa ee 4 oe set 2 3 ps s code a e le ae
 ago _  ee  |  wi rise o9318 9993 ain ah so heer jazz levee evan _ sie_ o eeeff er oe
+Chick Corea  |  wv _ a e _ in ms oan ww oh _ he ake sy ao we we fe pangl ct ae oe sc oe fee co set eg ee oy e bd pfs chick corea ew 5 epee be oe ne pele ond a 2 ml 2 55 cs z _ fry es senta 7 bel ag te 82 ra ee loy ey pea oa as beal ts aa ak se ll sr as ceo wel tera a i __ we ew re a my c es e oo a oo eee oe we 7e tos cer sa h a l aand oye bj am ss oo nn pate th i 7
 ee nn o ./saqm-oENNNN._TovVTVoVoOOAVMDATWwNoooaEOEOEOEOEOEOEOEOououuu 0 _qe Dw  |  wv f aft 5 s p 4 ea ee ia ole ek wv 7 a ae le a oe 3 ar oe het aoe ee i _ b oe _ a oe r o o mw t ov p z ey d bd a é de a a
 TT lo FF FF FFF (0, SSS ys  |  wv t i 7 4 7 fag ay 7 o y r eo f _ _ a rd a t rv 0 tews ae we a y f a w wt sar 8 es ae vy 4 i _ iv lo me a it mn i s a a ee res 7 i a to en rop khari 7 mae see a ra a wis f os une le ats f a _ an ace 3 ard om ab ee 3 qa oy bm 4 4 nf on a_i t we i am 4 aa iad t _ a a 4 4 or ss aaa fe
+Mahavishnu Orchestra  |  wv t of het i _ ifs z a a eee a le ww ws pa 3 rohan a see am elem el _ pf pa wi ae te mahavishnu orchestra wee sf sige et lo ot 1m ae a s ae 7 _ a tb ote vt ro sar ba a cand wes ee tan we a ww io a s 7 pp vy 1 je ue 8 o aa i of 6 ey ne l aand a
+Y Pat Metheny  |  wynton marsalis art blakey charlie parker
 WwW Herbie Hancock  |  wynton marsalis duke ellington dizzy gillespie ne ee ne
+ary Mle, SO —_  |  wynton marsalis s
 xX Free Jazz
 Birth of the Cool
 ~W~” ALove Supreme
