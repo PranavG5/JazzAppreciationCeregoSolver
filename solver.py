@@ -451,7 +451,21 @@ class SolverApp:
 
                 elif state == ScreenState.INFO_CARD:
                     idle_count = 0
-                    self._log("[Info card] — clicking Got It")
+                    from ocr_engine import ocr_region
+                    # The card shows: subject (top / question region)
+                    #                 descriptor (bottom / choices region)
+                    # e.g.  "Pat Metheny"  /  "Guitar/Composer"
+                    subject    = ocr_region(q_region, psm=6).strip()
+                    descriptor = ocr_region(c_region, psm=6).strip()
+
+                    if subject and descriptor:
+                        # Store both directions — Cerego asks either way
+                        self._feedback.record(subject,    descriptor)
+                        self._feedback.record(descriptor, subject)
+                        self._log(f"[Info card] {subject}  →  {descriptor}  (memorised)")
+                    else:
+                        self._log(f"[Info card] — could not read content, skipping")
+
                     self._click_on_chrome(*got_it_xy)
                     time.sleep(ADVANCE_DELAY)
 
