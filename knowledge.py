@@ -210,6 +210,26 @@ class FeedbackStore:
     def _save(self):
         with open(self._path, "w", encoding="utf-8") as f:
             json.dump(self._store, f, indent=2, ensure_ascii=False)
+        self._write_facts_file()
+
+    def _write_facts_file(self):
+        """Write a human-readable learned_facts.txt alongside feedback.json."""
+        txt_path = os.path.splitext(self._path)[0] + "_facts.txt"
+        # Deduplicate: only keep entries where question != answer (skip reverses)
+        # and collect unique (question, answer) pairs sorted alphabetically.
+        seen: set[frozenset] = set()
+        lines: list[str] = []
+        for q, a in sorted(self._store.items(), key=lambda x: x[0]):
+            pair = frozenset([q, _norm(a)])
+            if pair in seen:
+                continue
+            seen.add(pair)
+            lines.append(f"{a}  |  {self._store.get(_norm(a), q)}")
+        with open(txt_path, "w", encoding="utf-8") as f:
+            f.write(f"Learned facts  ({len(lines)} unique pairs)\n")
+            f.write("=" * 60 + "\n\n")
+            for line in lines:
+                f.write(line + "\n")
 
     def record(self, question: str, correct_answer: str):
         """Save the confirmed correct answer for this question and persist."""

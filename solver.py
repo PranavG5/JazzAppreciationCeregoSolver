@@ -466,7 +466,8 @@ class SolverApp:
                     else:
                         self._log(f"[Info card] — could not read content, skipping")
 
-                    self._click_on_chrome(*got_it_xy)
+                    # Do NOT click anything — user clicks Got It manually.
+                    # Just wait long enough to avoid re-reading the same card.
                     time.sleep(ADVANCE_DELAY)
 
                 elif state == ScreenState.QUESTION:
