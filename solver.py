@@ -21,9 +21,10 @@ import os
 import time
 import threading
 import tkinter as tk
-from tkinter import scrolledtext
+from tkinter import scrolledtext, filedialog
 
 import anthropic
+import pdfplumber
 import pyautogui
 from PIL import Image
 
@@ -38,15 +39,17 @@ pyautogui.PAUSE    = 0.25
 
 # ── Claude prompts ────────────────────────────────────────────────────────────
 
-ANSWER_PROMPT = """\
+ANSWER_PROMPT_BASE = """\
 You are an expert assistant solving Cerego flashcard assignments for a Jazz Appreciation course.
 
+{knowledge_section}
+
 You will receive a screenshot of the Cerego quiz interface. Identify the current question and
-select the correct answer using your deep knowledge of jazz history, artists, instruments,
-eras, genres, and styles.
+select the correct answer. Prefer answers from the course material above when available;
+fall back to general jazz knowledge only if needed.
 
 Return ONLY a JSON object — no markdown fences, no explanation outside the JSON:
-{
+{{
   "question_visible": true | false,
   "assignment_complete": true | false,
   "question_type": "multiple_choice" | "matching" | "fill_in" | "other" | null,
@@ -55,7 +58,7 @@ Return ONLY a JSON object — no markdown fences, no explanation outside the JSO
   "click_x": <integer pixel x-coordinate of the answer to click, or null>,
   "click_y": <integer pixel y-coordinate of the answer to click, or null>,
   "reasoning": "<one-sentence explanation>"
-}
+}}
 
 Rules:
 - click_x / click_y must be the CENTER of the answer button you want to click.
@@ -65,6 +68,19 @@ Rules:
 - Coordinates are measured from the top-left of the screenshot.
 - Provide coordinates even when uncertain — wrong answers carry no penalty.
 """
+
+def build_answer_prompt(course_text: str) -> str:
+    if course_text:
+        knowledge_section = (
+            "=== COURSE SLIDES (use these as your primary reference) ===\n"
+            + course_text[:12000]   # stay well within token limits
+            + "\n=== END COURSE SLIDES ==="
+        )
+    else:
+        knowledge_section = (
+            "No course slides loaded — using general jazz knowledge."
+        )
+    return ANSWER_PROMPT_BASE.format(knowledge_section=knowledge_section)
 
 NEXT_PROMPT = """\
 You are helping a solver advance through Cerego flashcard screens after an answer has been clicked.
@@ -145,9 +161,11 @@ class SolverApp:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("Jazz Cerego Solver")
-        self.root.geometry("480x400")
+        self.root.geometry("480x440")
         self.root.resizable(False, False)
         self.root.attributes("-topmost", True)   # float above Chrome
+
+        self._course_text: str = ""   # extracted PDF text
 
         # ── API key ────────────────────────────────────────────────────────
         key_frame = tk.Frame(root, padx=10, pady=8)
@@ -157,6 +175,21 @@ class SolverApp:
         tk.Entry(key_frame, textvariable=self.api_var, show="*").pack(
             side=tk.LEFT, fill=tk.X, expand=True
         )
+
+        # ── PDF loader ─────────────────────────────────────────────────────
+        pdf_frame = tk.Frame(root, padx=10, pady=2)
+        pdf_frame.pack(fill=tk.X)
+        self.pdf_label = tk.Label(
+            pdf_frame, text="No slides PDF loaded", anchor="w",
+            fg="#888", font=("Segoe UI", 9)
+        )
+        self.pdf_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        tk.Button(
+            pdf_frame, text="Load PDF",
+            font=("Segoe UI", 9), relief=tk.FLAT,
+            bg="#2980b9", fg="white",
+            command=self._load_pdf,
+        ).pack(side=tk.RIGHT)
 
         # ── Buttons ────────────────────────────────────────────────────────
         btn_frame = tk.Frame(root, padx=10, pady=4)
@@ -257,6 +290,40 @@ class SolverApp:
         self._stop_event.set()
         self.root.destroy()
 
+    def _load_pdf(self):
+        path = filedialog.askopenfilename(
+            title="Select course slides PDF",
+            filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")],
+        )
+        if not path:
+            return
+        try:
+            pages = []
+            with pdfplumber.open(path) as pdf:
+                for page in pdf.pages:
+                    text = page.extract_text()
+                    if text:
+                        pages.append(text)
+            self._course_text = "\n\n".join(pages)
+            short = os.path.basename(path)
+            self.pdf_label.config(
+                text=f"✓ {short}  ({len(pages)} pages)", fg="#27ae60"
+            )
+            self._log(f"Loaded PDF: {short} — {len(pages)} pages of course content.\n")
+        except Exception as exc:
+            self.pdf_label.config(text=f"Error loading PDF: {exc}", fg="#e74c3c")
+            self._log(f"PDF load error: {exc}")
+
+    def _click_on_chrome(self, x: int, y: int):
+        """Temporarily drop topmost so Chrome receives the click."""
+        self.root.attributes("-topmost", False)
+        self.root.update()
+        time.sleep(0.15)
+        pyautogui.moveTo(x, y, duration=0.35)
+        pyautogui.click()
+        time.sleep(0.1)
+        self.root.attributes("-topmost", True)
+
     # ── Solver loop ────────────────────────────────────────────────────────
 
     def _run(self, api_key: str):
@@ -267,9 +334,11 @@ class SolverApp:
 
         while not self._stop_event.is_set():
             try:
+                answer_prompt = build_answer_prompt(self._course_text)
+
                 # ── Phase 1: Find the question and click the correct answer ──
                 img = screenshot_b64()
-                action = call_claude(client, ANSWER_PROMPT, img)
+                action = call_claude(client, answer_prompt, img)
 
                 if action.get("assignment_complete"):
                     self._log("✅  Assignment complete!")
@@ -287,8 +356,7 @@ class SolverApp:
                     self._log(f"→ {answer}  [{reason}]")
                     self._log(f"  clicking ({cx}, {cy})")
 
-                    pyautogui.moveTo(cx, cy, duration=0.35)
-                    pyautogui.click()
+                    self._click_on_chrome(cx, cy)
                     time.sleep(CLICK_DELAY)
 
                     # ── Phase 2: Find and click the Continue / Next button ──
@@ -299,8 +367,7 @@ class SolverApp:
                         nx, ny = int(nxt["click_x"]), int(nxt["click_y"])
                         label  = nxt.get("button_label") or "Next"
                         self._log(f'  → "{label}" button at ({nx}, {ny})\n')
-                        pyautogui.moveTo(nx, ny, duration=0.35)
-                        pyautogui.click()
+                        self._click_on_chrome(nx, ny)
                         time.sleep(ADVANCE_DELAY)
                     else:
                         self._log("  (no Continue button found — waiting)\n")
