@@ -237,57 +237,63 @@ def detect_screen_state(regions: dict) -> str:
 def read_button_label(button_xy: tuple) -> str:
     """
     Detect whether the bottom-right button says 'Got It' or 'Know It'
-    by scanning pixel colors — NO OCR needed.
+    by scanning pixel colors — no OCR needed.
 
-    The button is always green.  We look for green pixels in the region.
-    Then we sample whether the NEIGHBORING area to the LEFT contains a
-    second button ('Don't Know It' = question page) or not (info card).
+    The green button is always present on both page types.
+    The distinguishing signal is whether a second ('Don't Know It') button
+    sits to its left — that only appears on question pages.
 
-    Logic:
-      - Green button present + 'Don't Know It' button to its left → Know It (question)
-      - Green button present, no second button nearby             → Got It  (info card)
-      - No green button detected                                  → unknown (loading)
+    Returns:
+      'got_it'   — green button only (info card)
+      'know_it'  — green button + second button to its left (question)
+      'unknown'  — no green button at all (choose-choice page / loading)
     """
     x, y = button_xy
 
-    # ── Sample the green button itself ────────────────────────────────────────
-    btn_region = {"x": max(0, x - 90), "y": max(0, y - 30), "w": 180, "h": 60}
+    # ── 1. Scan a generous region around the calibrated button ────────────────
+    btn_region = {"x": max(0, x - 110), "y": max(0, y - 40), "w": 220, "h": 80}
     img        = capture_region(btn_region).convert("RGB")
     w, h       = img.size
 
     green_count = 0
-    for py in range(0, h, 4):
-        for px in range(0, w, 4):
+    total       = 0
+    for py in range(0, h, 3):
+        for px in range(0, w, 3):
             r, g, b = img.getpixel((px, py))
-            if g > r + 20 and g > b + 20 and g > 100:
+            total += 1
+            # Cerego green: G clearly above R and B, not too dark
+            if g > r + 15 and g > b + 15 and g > 80:
                 green_count += 1
 
-    total_samples = (h // 4) * (w // 4) or 1
-    if green_count / total_samples < 0.08:
-        return "unknown"   # no green button visible yet (loading)
+    green_ratio = green_count / total if total else 0
 
-    # ── Check for 'Don't Know It' button to the left of the green button ──────
-    # On question pages, there is a second grey/white button ~200px to the left.
-    # On info-card pages, the green button is the only one.
-    left_region = {"x": max(0, x - 300), "y": max(0, y - 30), "w": 160, "h": 60}
+    # Threshold 0.05 — even a partially visible green button qualifies
+    if green_ratio < 0.05:
+        return "unknown"   # no green button → choose-choice page or loading
+
+    # ── 2. Check for 'Don't Know It' button to the left ───────────────────────
+    # On question pages a second white/grey button sits ~150-250 px left.
+    # On info-card pages only the green button exists.
+    left_region = {"x": max(0, x - 320), "y": max(0, y - 40), "w": 180, "h": 80}
     left_img    = capture_region(left_region).convert("RGB")
     lw, lh      = left_img.size
 
-    # Count non-white, non-background pixels (a button has a border/fill)
-    filled = 0
-    for py in range(0, lh, 4):
-        for px in range(0, lw, 4):
+    dark_count = 0
+    ltotal     = 0
+    for py in range(0, lh, 3):
+        for px in range(0, lw, 3):
             r, g, b = left_img.getpixel((px, py))
+            ltotal += 1
             brightness = (r + g + b) / 3
-            # Not pure white background (>245) and not transparent
-            if brightness < 235:
-                filled += 1
+            # A button has visible borders / fill that isn't pure white
+            if brightness < 230:
+                dark_count += 1
 
-    left_samples = (lh // 4) * (lw // 4) or 1
-    if filled / left_samples > 0.12:
-        return "know_it"   # second button visible → question page
-    else:
-        return "got_it"    # only the green button → info card
+    left_ratio = dark_count / ltotal if ltotal else 0
+
+    if left_ratio > 0.10:
+        return "know_it"   # second button present → question page
+    return "got_it"        # only the green button → info card
 
 
 # ── Post-answer feedback detector ─────────────────────────────────────────────

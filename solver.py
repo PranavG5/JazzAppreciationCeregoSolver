@@ -455,27 +455,21 @@ class SolverApp:
 
         while not self._stop_event.is_set():
             try:
-                # ── Read the green button label — this is the definitive signal ──
+                # Button label is the ONLY signal used to classify the page.
                 label = read_button_label(know_it_xy)
 
-                # ── Completion check (text-based fallback) ─────────────────────
-                q_text = ocr_region(q_region, psm=6).lower()
-                if any(kw in q_text for kw in
-                       ["well done", "assignment complete", "you completed",
-                        "finished", "great job", "all done"]):
-                    self._log("Assignment complete!")
-                    self._set_status("Done — assignment complete")
-                    break
-
-                # ══ INFO CARD — button says "Got It" ══════════════════════════
+                # ══ INFO CARD — "Got It" button present ═══════════════════════
+                # Rule: cursor NEVER leaves got_it_xy. Click first, learn second.
                 if label == "got_it":
                     idle_count = 0
 
-                    # Read & memorise the fact shown on the card.
-                    # Cursor NEVER leaves the button during this entire block.
+                    # Click Got It immediately — highest priority action
+                    self._click_on_chrome(*got_it_xy)
+                    time.sleep(0.2)
+
+                    # OCR the card content while still on the button
                     subject    = ocr_region(q_region, psm=6).strip()
                     descriptor = ocr_region(c_region, psm=6).strip()
-
                     if subject and descriptor:
                         self._feedback.record(subject,    descriptor)
                         self._feedback.record(descriptor, subject)
@@ -483,18 +477,26 @@ class SolverApp:
                     else:
                         self._log("[Info card] — could not read content")
 
-                    # Spam-click Got It (cursor stays on button the whole time)
-                    for _ in range(5):
+                    # Keep spam-clicking Got It until the page advances
+                    for _ in range(4):
                         if self._stop_event.is_set():
                             break
                         self._click_on_chrome(*got_it_xy)
                         time.sleep(0.25)
                     time.sleep(ADVANCE_DELAY)
 
-                # ══ QUESTION — button says "Know It" ══════════════════════════
+                # ══ QUESTION — "Know It" button present ═══════════════════════
                 elif label == "know_it":
                     idle_count = 0
                     question_text = ocr_region(q_region, psm=6)
+
+                    # Completion check — only ever runs on question pages
+                    if any(kw in question_text.lower() for kw in
+                           ["well done", "assignment complete", "you completed",
+                            "finished", "great job", "all done"]):
+                        self._log("Assignment complete!")
+                        self._set_status("Done — assignment complete")
+                        break
                     choices       = find_answer_choices(c_region)
 
                     if choices:
