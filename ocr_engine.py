@@ -236,54 +236,98 @@ def detect_screen_state(regions: dict) -> str:
 
 def detect_answer_feedback(regions: dict) -> tuple[str, str]:
     """
-    Call this AFTER clicking an answer choice, before clicking Know It.
-    Cerego briefly shows whether the answer was correct and (if wrong)
-    reveals the correct answer.
+    After an answer is clicked, detect Cerego's visual feedback by scanning
+    the choices region for colored highlight boxes.
 
-    OCRs both the question region and the choices region, then searches for
-    verdict keywords and patterns that reveal the correct answer text.
+    Cerego shows:
+      ✓  Green box  = the CORRECT answer
+      ✗  Red/pink box = the WRONG answer that was clicked (only when incorrect)
 
-    Returns:
-        (verdict, correct_answer)
-        verdict       — "correct" | "incorrect" | "unknown"
-        correct_answer — the correct answer text, or "" if not extractable
+    Logic:
+      green only  → verdict "correct"   (we clicked the green box)
+      green + red → verdict "incorrect" (red = us, green = right answer)
+      neither     → verdict "unknown"
+
+    Returns (verdict, correct_answer_text) where correct_answer_text is the
+    OCR'd text of the green-highlighted choice (empty if not found).
     """
-    q_text = ocr_region(regions["question"], psm=6)
-    c_text = ocr_region(regions["choices"],  psm=11)
-    combined = (q_text + "\n" + c_text).strip()
-    lower    = combined.lower()
+    img     = capture_region(regions["choices"])
+    img_rgb = img.convert("RGB")
+    w, h    = img_rgb.size
 
-    # ── Verdict ───────────────────────────────────────────────────────────────
-    correct_kw   = ["correct!", "that's right", "you got it", "nicely done",
-                    "great job", "well done", "right!"]
-    incorrect_kw = ["incorrect", "that's not right", "not quite", "wrong",
-                    "the correct answer", "the answer is", "the answer was",
-                    "actually,", "actually the"]
+    # ── Step 1: scan every 3rd row for green / red signatures ─────────────────
+    # Green box:     R~185-215  G~225-245  B~175-210  (G clearly dominant)
+    # Red/pink box:  R~235-250  G~180-205  B~180-205  (R clearly dominant)
+    # Grey (normal): all channels roughly equal and high (>220)
 
-    verdict = "unknown"
-    if any(kw in lower for kw in correct_kw):
-        verdict = "correct"
-    elif any(kw in lower for kw in incorrect_kw):
+    row_green = []   # y values with a green signature
+    row_red   = []   # y values with a red/pink signature
+
+    for y in range(0, h, 3):
+        r_sum = g_sum = b_sum = n = 0
+        for x in range(0, w, 8):
+            r, g, b = img_rgb.getpixel((x, y))
+            r_sum += r; g_sum += g; b_sum += b; n += 1
+        if n == 0:
+            continue
+        ra, ga, ba = r_sum / n, g_sum / n, b_sum / n
+
+        # Green: G > R and G > B by a clear margin, background is light
+        if ga > ra + 12 and ga > ba + 12 and ga > 190:
+            row_green.append(y)
+        # Red/pink: R > G and R > B by a clear margin, background is light
+        elif ra > ga + 18 and ra > ba + 18 and ra > 210:
+            row_red.append(y)
+
+    # ── Step 2: merge adjacent rows into bands ─────────────────────────────────
+    green_band = _rows_to_band(row_green, gap=18)
+    red_band   = _rows_to_band(row_red,   gap=18)
+
+    # ── Step 3: determine verdict ──────────────────────────────────────────────
+    if green_band and red_band:
         verdict = "incorrect"
+    elif green_band:
+        verdict = "correct"
+    else:
+        return "unknown", ""
 
-    # ── Extract the revealed correct answer ───────────────────────────────────
+    # ── Step 4: OCR the green band to extract the correct answer text ──────────
     correct_answer = ""
-    patterns = [
-        r"the correct answer (?:is|was)[:\s]+(.+)",
-        r"the answer (?:is|was)[:\s]+(.+)",
-        r"correct answer[:\s]+(.+)",
-        r"actually[,\s]+(?:the answer is\s*)?(.+)",
-        r"correct[!:\s]+([A-Z].{3,60})",   # capitalised phrase after "Correct!"
-    ]
-    for pat in patterns:
-        m = re.search(pat, lower)
-        if m:
-            # Pull the same span from the original (non-lowercased) text for
-            # proper casing, then strip trailing noise.
-            raw = combined[m.start(1):m.end(1)].strip()
-            raw = re.split(r"[\n\r]", raw)[0].strip()   # first line only
-            if 2 < len(raw) < 120:
-                correct_answer = raw
-                break
+    if green_band:
+        y1, y2  = green_band
+        # Add a small margin so we don't clip ascenders/descenders
+        y1 = max(0, y1 - 6)
+        y2 = min(h, y2 + 6)
+        band_img = img.crop((0, y1, w, y2))
+        band_img = _preprocess(band_img)
+        text = pytesseract.image_to_string(
+            band_img, config="--psm 7 --oem 3"
+        ).strip()
+        # Strip checkmark glyphs and OCR noise — keep printable text
+        text = re.sub(r"[^\w\s/\-\(\)\.,']", "", text).strip()
+        correct_answer = text
 
     return verdict, correct_answer
+
+
+def _rows_to_band(rows: list[int], gap: int = 18) -> tuple[int, int] | None:
+    """
+    Merge a sorted list of row y-values into contiguous bands (runs where
+    consecutive values differ by ≤ gap).  Return the largest band as
+    (y_start, y_end), or None if the list is empty.
+    """
+    if not rows:
+        return None
+
+    bands: list[tuple[int, int]] = []
+    start = rows[0]
+    prev  = rows[0]
+
+    for y in rows[1:]:
+        if y - prev > gap:
+            bands.append((start, prev))
+            start = y
+        prev = y
+    bands.append((start, prev))
+
+    return max(bands, key=lambda b: b[1] - b[0])
